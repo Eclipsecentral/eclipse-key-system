@@ -1,44 +1,38 @@
-const menuButton = document.getElementById("menuButton");
-const sidebar = document.getElementById("sidebar");
-const overlay = document.getElementById("overlay");
+const menuButton =
+  document.getElementById("menuButton");
 
-const menuItems = document.querySelectorAll(
-  ".menu-item[data-page]"
-);
+const sidebar =
+  document.getElementById("sidebar");
+
+const overlay =
+  document.getElementById("overlay");
+
+const navItems =
+  document.querySelectorAll(".nav-item");
+
+const pageButtons =
+  document.querySelectorAll(
+    "[data-page-button]"
+  );
+
+
+/* =========================
+   PÁGINAS
+========================= */
 
 const pages = {
-  generate: document.getElementById("generatePage"),
-  account: document.getElementById("accountPage"),
-  key: document.getElementById("keyPage"),
-  settings: document.getElementById("settingsPage")
+  home:
+    document.getElementById("homePage"),
+
+  discord:
+    document.getElementById("discordPage"),
+
+  key:
+    document.getElementById("keyPage"),
+
+  shop:
+    document.getElementById("shopPage")
 };
-
-const discordStatus =
-  document.getElementById("discordStatus");
-
-const generateButton =
-  document.getElementById("generateButton");
-
-const status =
-  document.getElementById("status");
-
-const keyResult =
-  document.getElementById("keyResult");
-
-const generatedKey =
-  document.getElementById("generatedKey");
-
-const copyKey =
-  document.getElementById("copyKey");
-
-const accountName =
-  document.getElementById("accountName");
-
-const accountId =
-  document.getElementById("accountId");
-
-const myKeyBox =
-  document.getElementById("myKeyBox");
 
 
 /* =========================
@@ -46,63 +40,124 @@ const myKeyBox =
 ========================= */
 
 function openMenu() {
+
   sidebar.classList.add("open");
+
   overlay.classList.add("active");
+
 }
+
 
 function closeMenu() {
+
   sidebar.classList.remove("open");
+
   overlay.classList.remove("active");
+
 }
 
-menuButton.addEventListener("click", () => {
 
-  if (sidebar.classList.contains("open")) {
-    closeMenu();
-  } else {
-    openMenu();
+menuButton.addEventListener(
+  "click",
+  () => {
+
+    if (
+      sidebar.classList.contains("open")
+    ) {
+
+      closeMenu();
+
+    } else {
+
+      openMenu();
+
+    }
+
   }
+);
 
-});
 
-overlay.addEventListener("click", closeMenu);
+overlay.addEventListener(
+  "click",
+  closeMenu
+);
 
 
 /* =========================
    NAVEGAÇÃO
 ========================= */
 
-menuItems.forEach(item => {
+function navigate(pageName) {
 
-  item.addEventListener("click", () => {
+  if (!pages[pageName]) return;
 
-    const page = item.dataset.page;
 
-    menuItems.forEach(button => {
-      button.classList.remove("active");
-    });
+  Object.values(pages).forEach(
+    page => {
 
-    item.classList.add("active");
+      page.classList.remove(
+        "active-page"
+      );
 
-    Object.values(pages).forEach(section => {
-      section.classList.remove("active-page");
-    });
-
-    if (pages[page]) {
-      pages[page].classList.add("active-page");
     }
+  );
 
-    closeMenu();
 
-    if (page === "account") {
-      loadAccount();
-    }
+  pages[pageName].classList.add(
+    "active-page"
+  );
 
-    if (page === "key") {
-      loadMyKey();
-    }
+
+  navItems.forEach(item => {
+
+    item.classList.toggle(
+      "active",
+      item.dataset.page === pageName
+    );
 
   });
+
+
+  closeMenu();
+
+
+  if (pageName === "key") {
+
+    checkDiscord();
+
+  }
+
+}
+
+
+navItems.forEach(item => {
+
+  item.addEventListener(
+    "click",
+    () => {
+
+      navigate(
+        item.dataset.page
+      );
+
+    }
+  );
+
+});
+
+
+pageButtons.forEach(button => {
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      navigate(
+        button.dataset.pageButton
+      );
+
+    }
+  );
 
 });
 
@@ -113,35 +168,57 @@ menuItems.forEach(item => {
 
 let currentUser = null;
 
-async function loadDiscord() {
+
+const discordStatus =
+  document.getElementById(
+    "discordStatus"
+  );
+
+
+async function checkDiscord() {
+
+  if (!discordStatus) return;
+
+
+  discordStatus.textContent =
+    "Verificando Discord...";
+
 
   try {
 
-    const response = await fetch(
-      "/api/discord/me",
-      {
-        credentials: "include"
-      }
-    );
+    const response =
+      await fetch(
+        "/api/discord/me",
+        {
+          credentials: "include"
+        }
+      );
 
-    const data = await response.json();
 
-    if (!data.authenticated) {
+    const data =
+      await response.json();
+
+
+    if (
+      !data.authenticated
+    ) {
+
+      currentUser = null;
 
       discordStatus.textContent =
         "Discord não conectado";
 
-      discordStatus.classList.remove("connected");
-      discordStatus.classList.add("loading");
-
-      generateButton.textContent =
-        "Entrar com Discord";
+      discordStatus.classList.remove(
+        "connected"
+      );
 
       return;
 
     }
 
+
     currentUser = data.user;
+
 
     discordStatus.textContent =
       `● Discord conectado como ${
@@ -149,8 +226,11 @@ async function loadDiscord() {
         data.user.username
       }`;
 
-    discordStatus.classList.remove("loading");
-    discordStatus.classList.add("connected");
+
+    discordStatus.classList.add(
+      "connected"
+    );
+
 
   } catch (error) {
 
@@ -165,186 +245,174 @@ async function loadDiscord() {
 
 
 /* =========================
-   LOGIN
+   GERAR KEY
 ========================= */
 
-generateButton.addEventListener(
-  "click",
-  async () => {
+const generateButton =
+  document.getElementById(
+    "generateButton"
+  );
 
-    if (!currentUser) {
 
-      window.location.href =
-        "/api/discord/login";
+const keyResult =
+  document.getElementById(
+    "keyResult"
+  );
 
-      return;
 
-    }
+const generatedKey =
+  document.getElementById(
+    "generatedKey"
+  );
 
-    /*
-      A geração real da Key será ligada
-      ao endpoint do Supabase na próxima etapa.
-    */
 
-    status.textContent =
-      "Preparando geração da sua Key...";
+const status =
+  document.getElementById(
+    "status"
+  );
 
-    generateButton.disabled = true;
 
-    try {
+if (generateButton) {
 
-      const response = await fetch(
-        "/api/keys/generate",
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
-      );
+  generateButton.addEventListener(
+    "click",
+    async () => {
 
-      const data = await response.json();
+      /*
+       * Se não estiver conectado,
+       * manda para o Discord.
+       */
 
-      if (!response.ok) {
-        throw new Error(
-          data.error ||
-          "Não foi possível gerar a Key."
-        );
+      if (!currentUser) {
+
+        window.location.href =
+          "/api/discord/login";
+
+        return;
+
       }
 
-      generatedKey.textContent =
-        data.key;
 
-      keyResult.classList.remove("hidden");
-
-      status.textContent =
-        "Key gerada com sucesso.";
-
-      loadMyKey();
-
-    } catch (error) {
-
-      console.error(error);
+      generateButton.disabled =
+        true;
 
       status.textContent =
-        error.message ||
-        "Erro ao gerar a Key.";
+        "Gerando sua Key...";
 
-    } finally {
 
-      generateButton.disabled = false;
+      try {
+
+        const response =
+          await fetch(
+            "/api/keys/generate",
+            {
+              method: "POST",
+
+              credentials: "include",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              }
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.error ||
+            "Não foi possível gerar a Key."
+          );
+
+        }
+
+
+        generatedKey.textContent =
+          data.key;
+
+
+        keyResult.classList.remove(
+          "hidden"
+        );
+
+
+        status.textContent =
+          "Sua Key foi gerada com sucesso.";
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+          error.message ||
+          "Erro ao gerar a Key.";
+
+      } finally {
+
+        generateButton.disabled =
+          false;
+
+      }
 
     }
+  );
 
-  }
-);
+}
 
 
 /* =========================
    COPIAR KEY
 ========================= */
 
-copyKey.addEventListener(
-  "click",
-  async () => {
-
-    const key =
-      generatedKey.textContent;
-
-    try {
-
-      await navigator.clipboard.writeText(key);
-
-      copyKey.textContent = "Copiado!";
-
-      setTimeout(() => {
-        copyKey.textContent = "Copiar";
-      }, 1500);
-
-    } catch {
-
-      copyKey.textContent =
-        "Erro";
-
-    }
-
-  }
-);
+const copyKey =
+  document.getElementById(
+    "copyKey"
+  );
 
 
-/* =========================
-   CONTA
-========================= */
+if (copyKey) {
 
-async function loadAccount() {
+  copyKey.addEventListener(
+    "click",
+    async () => {
 
-  if (!currentUser) {
-
-    accountName.textContent =
-      "Discord não conectado";
-
-    accountId.textContent =
-      "Faça login pelo menu Gerar Key";
-
-    return;
-
-  }
-
-  accountName.textContent =
-    currentUser.global_name ||
-    currentUser.username;
-
-  accountId.textContent =
-    `Discord ID: ${currentUser.id}`;
-
-}
+      const key =
+        generatedKey.textContent;
 
 
-/* =========================
-   MINHA KEY
-========================= */
+      try {
 
-async function loadMyKey() {
+        await navigator.clipboard
+          .writeText(key);
 
-  if (!currentUser) {
 
-    myKeyBox.textContent =
-      "Conecte seu Discord primeiro.";
+        copyKey.textContent =
+          "Copiado!";
 
-    return;
 
-  }
+        setTimeout(() => {
 
-  try {
+          copyKey.textContent =
+            "Copiar";
 
-    const response = await fetch(
-      "/api/keys/me",
-      {
-        credentials: "include"
+        }, 1500);
+
+
+      } catch {
+
+        copyKey.textContent =
+          "Erro";
+
       }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok || !data.key) {
-
-      myKeyBox.textContent =
-        "Nenhuma Key encontrada.";
-
-      return;
 
     }
-
-    myKeyBox.innerHTML =
-      `<code>${data.key}</code>`;
-
-  } catch {
-
-    myKeyBox.textContent =
-      "Nenhuma Key encontrada.";
-
-  }
+  );
 
 }
 
@@ -353,4 +421,4 @@ async function loadMyKey() {
    INICIALIZAÇÃO
 ========================= */
 
-loadDiscord();
+checkDiscord();

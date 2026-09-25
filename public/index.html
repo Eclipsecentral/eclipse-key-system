@@ -3,22 +3,264 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Eclipse Key System</title>
+
   <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
+
+  <div class="background-glow glow-1"></div>
+  <div class="background-glow glow-2"></div>
+
+  <!-- HEADER -->
+  <header class="topbar">
+
+    <button id="menuButton" class="menu-button" aria-label="Abrir menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <div class="top-logo">
+      <span>☾</span>
+      Eclipse
+    </div>
+
+  </header>
+
+  <!-- OVERLAY -->
+  <div id="overlay" class="overlay"></div>
+
+  <!-- MENU -->
+  <aside id="sidebar" class="sidebar">
+
+    <div class="sidebar-header">
+      <div class="sidebar-logo">☾</div>
+
+      <div>
+        <strong>Eclipse</strong>
+        <small>Key System</small>
+      </div>
+    </div>
+
+    <div class="menu-section">
+      <span class="menu-title">PRINCIPAL</span>
+
+      <button class="menu-item active" data-page="generate">
+        <span>◆</span>
+        Gerar Key
+      </button>
+
+      <button class="menu-item" data-page="account">
+        <span>◉</span>
+        Minha Conta
+      </button>
+
+      <button class="menu-item" data-page="key">
+        <span>◇</span>
+        Minha Key
+      </button>
+    </div>
+
+    <div class="menu-section">
+      <span class="menu-title">OUTROS</span>
+
+      <button class="menu-item" data-page="settings">
+        <span>⚙</span>
+        Configurações
+      </button>
+
+      <a
+        class="menu-item discord-link"
+        href="https://discord.com"
+        target="_blank"
+      >
+        <span>◈</span>
+        Discord
+      </a>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="connection">
+        <span class="connection-dot"></span>
+        <div>
+          <strong>Online</strong>
+          <small>Eclipse System</small>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
   <main class="container">
-    <section class="card">
-      <div class="logo">☾</div>
-      <h1>Eclipse Key System</h1>
-      <p>Obtenha sua Key de acesso ao Eclipse Hub.</p>
 
-      <button id="getKey">Obter Key</button>
+    <!-- GERAR KEY -->
+    <section id="generatePage" class="page active-page">
 
-      <div id="status" class="status"></div>
+      <div class="card">
+
+        <div class="card-icon">
+          ☾
+        </div>
+
+        <span class="badge">
+          ECLIPSE HUB
+        </span>
+
+        <h1>Gerar sua Key</h1>
+
+        <p>
+          Gere uma Key exclusiva para acessar
+          o Eclipse Hub.
+        </p>
+
+        <div id="discordStatus" class="discord-status loading">
+          Verificando Discord...
+        </div>
+
+        <button id="generateButton" class="primary-button">
+          <span>◆</span>
+          Gerar Key
+        </button>
+
+        <div id="keyResult" class="key-result hidden">
+
+          <span class="result-label">
+            SUA KEY
+          </span>
+
+          <div class="key-box">
+            <code id="generatedKey">NHX-XXXX-XXXX-XXXX</code>
+
+            <button id="copyKey" class="copy-button">
+              Copiar
+            </button>
+          </div>
+
+        </div>
+
+        <div id="status" class="status"></div>
+
+      </div>
+
     </section>
+
+    <!-- CONTA -->
+    <section id="accountPage" class="page">
+
+      <div class="card">
+
+        <div class="card-icon">
+          ◉
+        </div>
+
+        <span class="badge">
+          CONTA
+        </span>
+
+        <h1>Minha Conta</h1>
+
+        <p>
+          Informações da sua conta Discord conectada.
+        </p>
+
+        <div class="account-box">
+
+          <div class="account-avatar">
+            ☾
+          </div>
+
+          <div class="account-info">
+            <strong id="accountName">
+              Carregando...
+            </strong>
+
+            <span id="accountId">
+              Discord ID
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- MINHA KEY -->
+    <section id="keyPage" class="page">
+
+      <div class="card">
+
+        <div class="card-icon">
+          ◇
+        </div>
+
+        <span class="badge">
+          MINHA KEY
+        </span>
+
+        <h1>Sua Key</h1>
+
+        <p>
+          Aqui aparecerá sua Key vinculada à sua conta.
+        </p>
+
+        <div id="myKeyBox" class="key-box large-key">
+          Nenhuma Key encontrada
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- CONFIGURAÇÕES -->
+    <section id="settingsPage" class="page">
+
+      <div class="card">
+
+        <div class="card-icon">
+          ⚙
+        </div>
+
+        <span class="badge">
+          SISTEMA
+        </span>
+
+        <h1>Configurações</h1>
+
+        <p>
+          Configurações do Eclipse Key System.
+        </p>
+
+        <div class="setting">
+
+          <div>
+            <strong>Tema Eclipse</strong>
+            <small>Interface escura premium</small>
+          </div>
+
+          <div class="toggle active">
+            <div></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
 
+  <footer>
+    Eclipse Key System
+    <span>•</span>
+    Eclipse Hub
+  </footer>
+
   <script src="/app.js"></script>
+
 </body>
-</html>
+  </html>

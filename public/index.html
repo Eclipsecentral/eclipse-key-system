@@ -4,247 +4,476 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Eclipse Key System</title>
+  <title>Eclipse Hub</title>
 
   <link rel="stylesheet" href="/style.css">
 </head>
 
 <body>
 
-  <div class="background-glow glow-1"></div>
-  <div class="background-glow glow-2"></div>
+  <div class="background-glow glow-one"></div>
+  <div class="background-glow glow-two"></div>
 
   <!-- HEADER -->
+
   <header class="topbar">
 
-    <button id="menuButton" class="menu-button" aria-label="Abrir menu">
+    <button id="menuButton" class="menu-button">
       <span></span>
       <span></span>
       <span></span>
     </button>
 
-    <div class="top-logo">
-      <span>☾</span>
-      Eclipse
-    </div>
-
-  </header>
-
-  <!-- OVERLAY -->
-  <div id="overlay" class="overlay"></div>
-
-  <!-- MENU -->
-  <aside id="sidebar" class="sidebar">
-
-    <div class="sidebar-header">
-      <div class="sidebar-logo">☾</div>
+    <div class="brand">
+      <div class="brand-icon">☾</div>
 
       <div>
-        <strong>Eclipse</strong>
+        <strong>Eclipse Hub</strong>
         <small>Key System</small>
       </div>
     </div>
 
-    <div class="menu-section">
-      <span class="menu-title">PRINCIPAL</span>
+  </header>
 
-      <button class="menu-item active" data-page="generate">
-        <span>◆</span>
-        Gerar Key
-      </button>
 
-      <button class="menu-item" data-page="account">
-        <span>◉</span>
-        Minha Conta
-      </button>
+  <!-- OVERLAY -->
 
-      <button class="menu-item" data-page="key">
-        <span>◇</span>
-        Minha Key
-      </button>
-    </div>
+  <div id="overlay" class="overlay"></div>
 
-    <div class="menu-section">
-      <span class="menu-title">OUTROS</span>
 
-      <button class="menu-item" data-page="settings">
-        <span>⚙</span>
-        Configurações
-      </button>
+  <!-- MENU -->
 
-      <a
-        class="menu-item discord-link"
-        href="https://discord.com"
-        target="_blank"
-      >
-        <span>◈</span>
-        Discord
-      </a>
-    </div>
+  <aside id="sidebar" class="sidebar">
 
-    <div class="sidebar-bottom">
-      <div class="connection">
-        <span class="connection-dot"></span>
-        <div>
-          <strong>Online</strong>
-          <small>Eclipse System</small>
+    <div class="sidebar-top">
+
+      <div class="sidebar-brand">
+
+        <div class="sidebar-icon">
+          ☾
         </div>
+
+        <div>
+          <strong>Eclipse Hub</strong>
+          <small>Key System</small>
+        </div>
+
       </div>
+
+    </div>
+
+
+    <nav class="navigation">
+
+      <span class="nav-title">
+        MENU
+      </span>
+
+
+      <button
+        class="nav-item active"
+        data-page="home"
+      >
+        <span class="nav-icon">⌂</span>
+        Início
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="discord"
+      >
+        <span class="nav-icon">◈</span>
+        Discord
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="key"
+      >
+        <span class="nav-icon">◇</span>
+        Obter Key
+      </button>
+
+
+      <button
+        class="nav-item"
+        data-page="shop"
+      >
+        <span class="nav-icon">◆</span>
+        Comprar Script
+      </button>
+
+    </nav>
+
+
+    <div class="sidebar-footer">
+
+      <span class="online-dot"></span>
+
+      <div>
+        <strong>Sistema Online</strong>
+        <small>Eclipse Hub</small>
+      </div>
+
     </div>
 
   </aside>
 
-  <!-- MAIN -->
-  <main class="container">
 
-    <!-- GERAR KEY -->
-    <section id="generatePage" class="page active-page">
+  <!-- CONTEÚDO -->
 
-      <div class="card">
+  <main class="main">
 
-        <div class="card-icon">
+
+    <!-- =========================
+         INÍCIO
+    ========================== -->
+
+    <section
+      id="homePage"
+      class="page active-page"
+    >
+
+      <div class="hero">
+
+        <div class="hero-badge">
+          <span></span>
+          ECLIPSE HUB
+        </div>
+
+
+        <div class="hero-logo">
           ☾
         </div>
 
-        <span class="badge">
-          ECLIPSE HUB
-        </span>
 
-        <h1>Gerar sua Key</h1>
+        <h1>
+          Eclipse Hub
+        </h1>
 
-        <p>
-          Gere uma Key exclusiva para acessar
-          o Eclipse Hub.
+
+        <p class="hero-description">
+          Uma experiência moderna, poderosa e
+          exclusiva para quem busca o melhor
+          desempenho.
         </p>
 
-        <div id="discordStatus" class="discord-status loading">
+
+        <div class="hero-buttons">
+
+          <button
+            class="hero-button primary"
+            data-page-button="discord"
+          >
+            <span>◈</span>
+            Entre no nosso Discord
+          </button>
+
+
+          <button
+            class="hero-button secondary"
+            data-page-button="shop"
+          >
+            <span>◆</span>
+            Comprar Script
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- INFORMAÇÕES -->
+
+      <div class="section-heading">
+
+        <span>POR QUE ECLIPSE?</span>
+
+        <h2>
+          Tudo em um só lugar.
+        </h2>
+
+        <p>
+          Tenha acesso ao sistema do Eclipse Hub
+          de forma simples, rápida e segura.
+        </p>
+
+      </div>
+
+
+      <div class="features">
+
+
+        <div class="feature-card">
+
+          <div class="feature-icon">
+            ◇
+          </div>
+
+          <h3>
+            Sistema de Key
+          </h3>
+
+          <p>
+            Gere e gerencie sua Key de acesso
+            diretamente pelo nosso sistema.
+          </p>
+
+        </div>
+
+
+        <div class="feature-card">
+
+          <div class="feature-icon">
+            ◈
+          </div>
+
+          <h3>
+            Comunidade
+          </h3>
+
+          <p>
+            Faça parte da nossa comunidade e
+            acompanhe todas as novidades.
+          </p>
+
+        </div>
+
+
+        <div class="feature-card">
+
+          <div class="feature-icon">
+            ◆
+          </div>
+
+          <h3>
+            Experiência Premium
+          </h3>
+
+          <p>
+            Uma interface moderna criada para
+            oferecer uma experiência profissional.
+          </p>
+
+        </div>
+
+
+      </div>
+
+
+      <!-- FINAL DA HOME -->
+
+      <div class="home-bottom">
+
+        <div class="bottom-content">
+
+          <span class="bottom-badge">
+            ECLIPSE HUB
+          </span>
+
+          <h2>
+            Pronto para começar?
+          </h2>
+
+          <p>
+            Entre na nossa comunidade ou adquira
+            o acesso ao Eclipse Hub.
+          </p>
+
+
+          <div class="hero-buttons">
+
+            <button
+              class="hero-button primary"
+              data-page-button="discord"
+            >
+              <span>◈</span>
+              Entre no nosso Discord
+            </button>
+
+
+            <button
+              class="hero-button secondary"
+              data-page-button="shop"
+            >
+              <span>◆</span>
+              Comprar Script
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =========================
+         DISCORD
+    ========================== -->
+
+    <section
+      id="discordPage"
+      class="page"
+    >
+
+      <div class="inner-card">
+
+        <div class="large-icon">
+          ◈
+        </div>
+
+        <span class="page-badge">
+          COMUNIDADE
+        </span>
+
+        <h1>
+          Nosso Discord
+        </h1>
+
+        <p>
+          Entre na nossa comunidade para acompanhar
+          atualizações, novidades, suporte e muito mais.
+        </p>
+
+
+        <a
+          href="https://discord.com"
+          target="_blank"
+          class="big-action"
+        >
+          <span>◈</span>
+          Entre no nosso Discord
+        </a>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =========================
+         OBTER KEY
+    ========================== -->
+
+    <section
+      id="keyPage"
+      class="page"
+    >
+
+      <div class="key-container">
+
+        <div class="key-header">
+
+          <div class="large-icon">
+            ◇
+          </div>
+
+          <span class="page-badge">
+            ECLIPSE KEY SYSTEM
+          </span>
+
+          <h1>
+            Obter Key
+          </h1>
+
+          <p>
+            Gere sua Key de acesso ao Eclipse Hub.
+          </p>
+
+        </div>
+
+
+        <div
+          id="discordStatus"
+          class="discord-status"
+        >
           Verificando Discord...
         </div>
 
-        <button id="generateButton" class="primary-button">
-          <span>◆</span>
+
+        <button
+          id="generateButton"
+          class="generate-button"
+        >
+          <span>◇</span>
           Gerar Key
         </button>
 
-        <div id="keyResult" class="key-result hidden">
 
-          <span class="result-label">
+        <div
+          id="keyResult"
+          class="key-result hidden"
+        >
+
+          <span>
             SUA KEY
           </span>
 
-          <div class="key-box">
-            <code id="generatedKey">NHX-XXXX-XXXX-XXXX</code>
+          <div class="key-display">
 
-            <button id="copyKey" class="copy-button">
+            <code id="generatedKey">
+              NHX-XXXX-XXXX-XXXX
+            </code>
+
+            <button id="copyKey">
               Copiar
             </button>
+
           </div>
 
         </div>
 
-        <div id="status" class="status"></div>
+
+        <div
+          id="status"
+          class="status"
+        ></div>
 
       </div>
 
     </section>
 
-    <!-- CONTA -->
-    <section id="accountPage" class="page">
 
-      <div class="card">
 
-        <div class="card-icon">
-          ◉
+    <!-- =========================
+         COMPRAR SCRIPT
+    ========================== -->
+
+    <section
+      id="shopPage"
+      class="page"
+    >
+
+      <div class="inner-card coming-soon">
+
+        <div class="large-icon">
+          ◆
         </div>
 
-        <span class="badge">
-          CONTA
+        <span class="page-badge">
+          ECLIPSE HUB
         </span>
 
-        <h1>Minha Conta</h1>
+        <h1>
+          Comprar Script
+        </h1>
 
         <p>
-          Informações da sua conta Discord conectada.
+          A loja do Eclipse Hub ainda está sendo
+          preparada.
         </p>
 
-        <div class="account-box">
 
-          <div class="account-avatar">
-            ☾
-          </div>
+        <div class="coming-box">
 
-          <div class="account-info">
-            <strong id="accountName">
-              Carregando...
-            </strong>
-
-            <span id="accountId">
-              Discord ID
-            </span>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- MINHA KEY -->
-    <section id="keyPage" class="page">
-
-      <div class="card">
-
-        <div class="card-icon">
-          ◇
-        </div>
-
-        <span class="badge">
-          MINHA KEY
-        </span>
-
-        <h1>Sua Key</h1>
-
-        <p>
-          Aqui aparecerá sua Key vinculada à sua conta.
-        </p>
-
-        <div id="myKeyBox" class="key-box large-key">
-          Nenhuma Key encontrada
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- CONFIGURAÇÕES -->
-    <section id="settingsPage" class="page">
-
-      <div class="card">
-
-        <div class="card-icon">
-          ⚙
-        </div>
-
-        <span class="badge">
-          SISTEMA
-        </span>
-
-        <h1>Configurações</h1>
-
-        <p>
-          Configurações do Eclipse Key System.
-        </p>
-
-        <div class="setting">
-
-          <div>
-            <strong>Tema Eclipse</strong>
-            <small>Interface escura premium</small>
-          </div>
-
-          <div class="toggle active">
-            <div></div>
-          </div>
+          <span>
+            EM BREVE
+          </span>
 
         </div>
 
@@ -254,13 +483,15 @@
 
   </main>
 
+
   <footer>
-    Eclipse Key System
-    <span>•</span>
     Eclipse Hub
+    <span>•</span>
+    Key System
   </footer>
+
 
   <script src="/app.js"></script>
 
 </body>
-  </html>
+</html>

@@ -1,164 +1,71 @@
-const menuButton =
-  document.getElementById("menuButton");
+const navItems = document.querySelectorAll(".nav-item");
+const pages = document.querySelectorAll(".page");
 
-const sidebar =
-  document.getElementById("sidebar");
+const sidebar = document.getElementById("sidebar");
+const menuBtn = document.getElementById("menuBtn");
 
-const overlay =
-  document.getElementById("overlay");
+const discordStatus = document.getElementById("discordStatus");
+const discordUser = document.getElementById("discordUser");
+const discordLoginBtn = document.getElementById("discordLoginBtn");
 
-const navItems =
-  document.querySelectorAll(".nav-item");
-
-const pageButtons =
-  document.querySelectorAll(
-    "[data-page-button]"
-  );
-
-
-/* =========================
-   PÁGINAS
-========================= */
-
-const pages = {
-  home:
-    document.getElementById("homePage"),
-
-  discord:
-    document.getElementById("discordPage"),
-
-  key:
-    document.getElementById("keyPage"),
-
-  shop:
-    document.getElementById("shopPage")
-};
-
-
-/* =========================
-   MENU
-========================= */
-
-function openMenu() {
-
-  sidebar.classList.add("open");
-
-  overlay.classList.add("active");
-
-}
-
-
-function closeMenu() {
-
-  sidebar.classList.remove("open");
-
-  overlay.classList.remove("active");
-
-}
-
-
-menuButton.addEventListener(
-  "click",
-  () => {
-
-    if (
-      sidebar.classList.contains("open")
-    ) {
-
-      closeMenu();
-
-    } else {
-
-      openMenu();
-
-    }
-
-  }
-);
-
-
-overlay.addEventListener(
-  "click",
-  closeMenu
-);
+const generateKeyBtn = document.getElementById("generateKeyBtn");
+const copyKeyBtn = document.getElementById("copyKeyBtn");
+const generatedKey = document.getElementById("generatedKey");
 
 
 /* =========================
    NAVEGAÇÃO
 ========================= */
 
-function navigate(pageName) {
+function openPage(pageName) {
 
-  if (!pages[pageName]) return;
-
-
-  Object.values(pages).forEach(
-    page => {
-
-      page.classList.remove(
-        "active-page"
-      );
-
-    }
-  );
-
-
-  pages[pageName].classList.add(
-    "active-page"
-  );
-
+  pages.forEach(page => {
+    page.classList.toggle(
+      "active",
+      page.id === pageName
+    );
+  });
 
   navItems.forEach(item => {
-
     item.classList.toggle(
       "active",
       item.dataset.page === pageName
     );
-
   });
 
+  sidebar.classList.remove("open");
 
-  closeMenu();
-
-
-  if (pageName === "key") {
-
-    checkDiscord();
-
-  }
-
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 
 navItems.forEach(item => {
 
-  item.addEventListener(
-    "click",
-    () => {
+  item.addEventListener("click", () => {
 
-      navigate(
-        item.dataset.page
-      );
+    openPage(item.dataset.page);
 
-    }
-  );
+  });
 
 });
 
 
-pageButtons.forEach(button => {
+document.querySelectorAll("[data-page]").forEach(button => {
 
-  button.addEventListener(
-    "click",
-    () => {
+  if (button.classList.contains("nav-item")) return;
 
-      navigate(
-        button.dataset.pageButton
-      );
+  button.addEventListener("click", () => {
+    openPage(button.dataset.page);
+  });
 
-    }
-  );
+});
 
+
+menuBtn?.addEventListener("click", () => {
+  sidebar.classList.toggle("open");
 });
 
 
@@ -166,71 +73,46 @@ pageButtons.forEach(button => {
    DISCORD
 ========================= */
 
-let currentUser = null;
-
-
-const discordStatus =
-  document.getElementById(
-    "discordStatus"
-  );
-
-
-async function checkDiscord() {
-
-  if (!discordStatus) return;
-
-
-  discordStatus.textContent =
-    "Verificando Discord...";
-
+async function loadDiscord() {
 
   try {
 
-    const response =
-      await fetch(
-        "/api/discord/me",
-        {
-          credentials: "include"
-        }
-      );
+    const response = await fetch("/api/discord/me", {
+      credentials: "include"
+    });
 
+    const data = await response.json();
 
-    const data =
-      await response.json();
+    if (!data.authenticated) {
 
+      discordStatus.textContent = "Discord não conectado";
+      discordUser.textContent = "Conecte sua conta para continuar.";
 
-    if (
-      !data.authenticated
-    ) {
+      discordLoginBtn.textContent = "Conectar Discord";
 
-      currentUser = null;
-
-      discordStatus.textContent =
-        "Discord não conectado";
-
-      discordStatus.classList.remove(
-        "connected"
-      );
+      discordLoginBtn.onclick = () => {
+        window.location.href = "/api/discord/login";
+      };
 
       return;
-
     }
 
 
-    currentUser = data.user;
+    const user = data.user;
 
+    discordStatus.textContent = "Discord conectado";
 
-    discordStatus.textContent =
-      `● Discord conectado como ${
-        data.user.global_name ||
-        data.user.username
-      }`;
+    discordUser.textContent =
+      user.global_name ||
+      user.username ||
+      user.id;
 
+    discordLoginBtn.textContent = "Conectado";
 
-    discordStatus.classList.add(
-      "connected"
-    );
+    discordLoginBtn.disabled = true;
 
+    discordLoginBtn.style.opacity = ".55";
+    discordLoginBtn.style.cursor = "default";
 
   } catch (error) {
 
@@ -239,186 +121,126 @@ async function checkDiscord() {
     discordStatus.textContent =
       "Erro ao verificar Discord";
 
+    discordUser.textContent =
+      "Tente atualizar a página.";
+
   }
 
 }
 
 
+loadDiscord();
+
+
 /* =========================
-   GERAR KEY
+   KEY
 ========================= */
 
-const generateButton =
-  document.getElementById(
-    "generateButton"
-  );
+generateKeyBtn?.addEventListener("click", async () => {
 
+  generateKeyBtn.disabled = true;
 
-const keyResult =
-  document.getElementById(
-    "keyResult"
-  );
+  generateKeyBtn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+    </svg>
+    Gerando...
+  `;
 
+  try {
 
-const generatedKey =
-  document.getElementById(
-    "generatedKey"
-  );
+    const response = await fetch("/api/keys/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      credentials: "include"
+    });
 
+    const data = await response.json();
 
-const status =
-  document.getElementById(
-    "status"
-  );
-
-
-if (generateButton) {
-
-  generateButton.addEventListener(
-    "click",
-    async () => {
-
-      /*
-       * Se não estiver conectado,
-       * manda para o Discord.
-       */
-
-      if (!currentUser) {
-
-        window.location.href =
-          "/api/discord/login";
-
-        return;
-
-      }
-
-
-      generateButton.disabled =
-        true;
-
-      status.textContent =
-        "Gerando sua Key...";
-
-
-      try {
-
-        const response =
-          await fetch(
-            "/api/keys/generate",
-            {
-              method: "POST",
-
-              credentials: "include",
-
-              headers: {
-                "Content-Type":
-                  "application/json"
-              }
-            }
-          );
-
-
-        const data =
-          await response.json();
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            data.error ||
-            "Não foi possível gerar a Key."
-          );
-
-        }
-
-
-        generatedKey.textContent =
-          data.key;
-
-
-        keyResult.classList.remove(
-          "hidden"
-        );
-
-
-        status.textContent =
-          "Sua Key foi gerada com sucesso.";
-
-
-      } catch (error) {
-
-        console.error(error);
-
-        status.textContent =
-          error.message ||
-          "Erro ao gerar a Key.";
-
-      } finally {
-
-        generateButton.disabled =
-          false;
-
-      }
-
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Não foi possível gerar a key."
+      );
     }
-  );
 
-}
+    generatedKey.textContent = data.key;
+
+    copyKeyBtn.disabled = false;
+
+  } catch (error) {
+
+    console.error(error);
+
+    generatedKey.textContent =
+      "Erro ao gerar key.";
+
+  } finally {
+
+    generateKeyBtn.disabled = false;
+
+    generateKeyBtn.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+      </svg>
+      Gerar Key
+    `;
+
+  }
+
+});
 
 
 /* =========================
    COPIAR KEY
 ========================= */
 
-const copyKey =
-  document.getElementById(
-    "copyKey"
-  );
+copyKeyBtn?.addEventListener("click", async () => {
 
+  const key = generatedKey.textContent;
 
-if (copyKey) {
+  if (!key || key === "Aguardando geração..." || key === "Erro ao gerar key.") {
+    return;
+  }
 
-  copyKey.addEventListener(
-    "click",
-    async () => {
+  try {
 
-      const key =
-        generatedKey.textContent;
+    await navigator.clipboard.writeText(key);
 
+    const original = copyKeyBtn.textContent;
 
-      try {
+    copyKeyBtn.textContent = "Key copiada!";
 
-        await navigator.clipboard
-          .writeText(key);
+    setTimeout(() => {
+      copyKeyBtn.textContent = original;
+    }, 1600);
 
+  } catch (error) {
 
-        copyKey.textContent =
-          "Copiado!";
+    console.error(error);
 
+  }
 
-        setTimeout(() => {
-
-          copyKey.textContent =
-            "Copiar";
-
-        }, 1500);
-
-
-      } catch {
-
-        copyKey.textContent =
-          "Erro";
-
-      }
-
-    }
-  );
-
-}
+});
 
 
 /* =========================
-   INICIALIZAÇÃO
+   DISCORD CALLBACK
 ========================= */
 
-checkDiscord();
+const params = new URLSearchParams(
+  window.location.search
+);
+
+if (params.get("discord") === "connected") {
+
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.pathname
+  );
+
+  loadDiscord();
+
+}

@@ -1,33 +1,63 @@
 const crypto = require("crypto");
 const { createClient } = require("@supabase/supabase-js");
 
-function parseCookies(req) {
-  const header = req.headers.cookie || "";
+function base64urlDecode(value) {
+  value = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
 
-  return Object.fromEntries(
-    header
-      .split(";")
-      .map(v => v.trim())
-      .filter(Boolean)
-      .map(v => {
-        const index = v.indexOf("=");
-        if (index === -1) return [v, ""];
-        return [
-          decodeURIComponent(v.slice(0, index)),
-          decodeURIComponent(v.slice(index + 1))
-        ];
-      })
+  while (value.length % 4) {
+    value += "=";
+  }
+
+  return Buffer.from(value, "base64").toString("utf8");
+}
+
+function verifySignature(payload, signature, secret) {
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("base64url");
+
+  if (signature.length !== expected.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
   );
 }
 
+function readCookies(req) {
+  const cookies = {};
+  const header = req.headers.cookie || "";
+
+  for (const part of header.split(";")) {
+    const index = part.indexOf("=");
+
+    if (index === -1) continue;
+
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+
+    cookies[key] = decodeURIComponent(value);
+  }
+
+  return cookies;
+}
+
 function generateKey() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const chars =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
   function part() {
     let result = "";
 
     for (let i = 0; i < 4; i++) {
-      result += chars[crypto.randomInt(0, chars.length)];
+      result += chars[
+        crypto.randomInt(0, chars.length)
+      ];
     }
 
     return result;
@@ -37,59 +67,71 @@ function generateKey() {
 }
 
 module.exports = async (req, res) => {
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      error: "Método não permitido."
-    });
-  }
-
   try {
+    // =========================================
+    // MÉTODO
+    // =========================================
+
+    if (req.method !== "POST") {
+      return res.status(405).json({
+        error: "Método não permitido."
+      });
+    }
+
+    // =========================================
+    // VARIÁVEIS
+    // =========================================
+
     const {
       SUPABASE_URL,
       SUPABASE_KEY,
       SESSION_SECRET
     } = process.env;
 
-    if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_SECRET) {
+    if (
+      !SUPABASE_URL ||
+      !SUPABASE_KEY ||
+      !SESSION_SECRET
+    ) {
       return res.status(500).json({
-        error: "Configuração do servidor incompleta."
+        error:
+          "Configuração do servidor incompleta."
       });
     }
 
-    // =========================
-    // VERIFICAR SESSÃO DISCORD
-    // =========================
+    // =========================================
+    // LER SESSÃO DISCORD
+    // =========================================
 
-    const cookies = parseCookies(req);
+    const cookies = readCookies(req);
     const session = cookies.eclipse_session;
 
     if (!session) {
       return res.status(401).json({
-        error: "Você precisa conectar sua conta do Discord."
+        error:
+          "Você precisa conectar sua conta do Discord."
       });
     }
 
-    const separator = session.lastIndexOf(".");
+    const parts = session.split(".");
 
-    if (separator === -1) {
+    if (parts.length !== 2) {
       return res.status(401).json({
         error: "Sessão inválida."
       });
     }
 
-    const payload = session.slice(0, separator);
-    const signature = session.slice(separator + 1);
+    const [payload, signature] = parts;
 
-    const expectedSignature = crypto
-      .createHmac("sha256", SESSION_SECRET)
-      .update(payload)
-      .digest("hex");
+    // =========================================
+    // VALIDAR ASSINATURA
+    // =========================================
 
     if (
-      signature.length !== expectedSignature.length ||
-      !crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
+      !verifySignature(
+        payload,
+        signature,
+        SESSION_SECRET
       )
     ) {
       return res.status(401).json({
@@ -97,11 +139,15 @@ module.exports = async (req, res) => {
       });
     }
 
+    // =========================================
+    // LER USUÁRIO
+    // =========================================
+
     let user;
 
     try {
       user = JSON.parse(
-        Buffer.from(payload, "base64url").toString("utf8")
+        base64urlDecode(payload)
       );
     } catch {
       return res.status(401).json({
@@ -115,35 +161,42 @@ module.exports = async (req, res) => {
       });
     }
 
-    // =========================
+    // =========================================
     // SUPABASE
-    // =========================
+    // =========================================
 
     const supabase = createClient(
       SUPABASE_URL,
       SUPABASE_KEY
     );
 
-    // =========================
-    // GERAR KEY
-    // =========================
+    // =========================================
+    // GERAR KEY ÚNICA
+    // =========================================
 
     let key = null;
 
     for (let attempt = 0; attempt < 10; attempt++) {
       const generated = generateKey();
 
-      const { data: existing, error: checkError } = await supabase
+      const {
+        data: existing,
+        error: checkError
+      } = await supabase
         .from("keys_sistema")
         .select("id")
         .eq("chave", generated)
         .maybeSingle();
 
       if (checkError) {
-        console.error("Erro verificando key:", checkError);
+        console.error(
+          "Erro verificando key:",
+          checkError
+        );
 
         return res.status(500).json({
-          error: "Não foi possível verificar a key."
+          error:
+            "Não foi possível verificar a key."
         });
       }
 
@@ -155,35 +208,45 @@ module.exports = async (req, res) => {
 
     if (!key) {
       return res.status(500).json({
-        error: "Não foi possível gerar uma key única."
+        error:
+          "Não foi possível gerar uma key única."
       });
     }
 
-    // =========================
-    // SALVAR
-    // =========================
+    // =========================================
+    // SALVAR KEY
+    // =========================================
 
-    const { data, error } = await supabase
+    const {
+      data,
+      error
+    } = await supabase
       .from("keys_sistema")
       .insert({
         chave: key,
         usada: false,
         user_id: null
       })
-      .select("id, chave, usada, user_id")
+      .select(
+        "id, chave, usada, user_id"
+      )
       .single();
 
     if (error) {
-      console.error("Erro criando key:", error);
+      console.error(
+        "Erro criando key:",
+        error
+      );
 
       return res.status(500).json({
-        error: "Não foi possível salvar a key."
+        error:
+          "Não foi possível salvar a key."
       });
     }
 
-    // =========================
+    // =========================================
     // RESPOSTA
-    // =========================
+    // =========================================
 
     return res.status(200).json({
       success: true,
@@ -194,10 +257,14 @@ module.exports = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Erro inesperado:", error);
+    console.error(
+      "Erro inesperado ao gerar key:",
+      error
+    );
 
     return res.status(500).json({
-      error: "Erro interno do servidor."
+      error:
+        "Erro interno do servidor."
     });
   }
 };

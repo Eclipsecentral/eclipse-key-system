@@ -79,10 +79,14 @@ function readSignedData(value) {
 
     const expected = sign(payload);
 
+    const signatureBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expected);
+
     if (
+      signatureBuffer.length !== expectedBuffer.length ||
       !crypto.timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expected)
+        signatureBuffer,
+        expectedBuffer
       )
     ) {
       return null;
@@ -122,10 +126,14 @@ app.get("/api/discord/login", (req, res) => {
     !DISCORD_REDIRECT_URI ||
     !SESSION_SECRET
   ) {
-    return res.status(500).send("Discord OAuth2 não configurado.");
+    return res
+      .status(500)
+      .send("Discord OAuth2 não configurado.");
   }
 
-  const state = crypto.randomBytes(32).toString("hex");
+  const state = crypto
+    .randomBytes(32)
+    .toString("hex");
 
   const stateCookie = createSignedData({
     state,
@@ -160,111 +168,152 @@ app.get("/api/discord/login", (req, res) => {
 |--------------------------------------------------------------------------
 */
 
-app.get("/api/discord/callback", async (req, res) => {
-  try {
-    const { code, state, error } = req.query;
+app.get(
+  "/api/discord/callback",
+  async (req, res) => {
+    try {
+      const {
+        code,
+        state,
+        error
+      } = req.query;
 
-    if (error) {
-      return res.redirect(
-        "/?discord_error=" +
-        encodeURIComponent(error)
+      if (error) {
+        return res.redirect(
+          "/?discord_error=" +
+          encodeURIComponent(error)
+        );
+      }
+
+      if (!code || !state) {
+        return res
+          .status(400)
+          .send("OAuth2 inválido.");
+      }
+
+      const cookies = readCookies(req);
+
+      const savedState = readSignedData(
+        cookies.eclipse_oauth_state
       );
-    }
 
-    if (!code || !state) {
-      return res.status(400).send("OAuth2 inválido.");
-    }
-
-    const cookies = readCookies(req);
-    const savedState = readSignedData(
-      cookies.eclipse_oauth_state
-    );
-
-    if (!savedState || savedState.state !== state) {
-      return res.status(400).send("Estado OAuth2 inválido.");
-    }
-
-    const tokenResponse = await fetch(
-      `${DISCORD_API}/oauth2/token`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/x-www-form-urlencoded"
-        },
-        body: new URLSearchParams({
-          client_id: DISCORD_CLIENT_ID,
-          client_secret: DISCORD_CLIENT_SECRET,
-          grant_type: "authorization_code",
-          code,
-          redirect_uri: DISCORD_REDIRECT_URI
-        })
+      if (
+        !savedState ||
+        savedState.state !== state
+      ) {
+        return res
+          .status(400)
+          .send("Estado OAuth2 inválido.");
       }
-    );
 
-    const tokenData = await tokenResponse.json();
-
-    if (!tokenResponse.ok || !tokenData.access_token) {
-      console.error("Discord token error:", tokenData);
-
-      return res
-        .status(502)
-        .send("Não foi possível autenticar com o Discord.");
-    }
-
-    const userResponse = await fetch(
-      `${DISCORD_API}/users/@me`,
-      {
-        headers: {
-          Authorization: `Bearer ${tokenData.access_token}`
+      const tokenResponse = await fetch(
+        `${DISCORD_API}/oauth2/token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/x-www-form-urlencoded"
+          },
+          body: new URLSearchParams({
+            client_id: DISCORD_CLIENT_ID,
+            client_secret:
+              DISCORD_CLIENT_SECRET,
+            grant_type:
+              "authorization_code",
+            code,
+            redirect_uri:
+              DISCORD_REDIRECT_URI
+          })
         }
+      );
+
+      const tokenData =
+        await tokenResponse.json();
+
+      if (
+        !tokenResponse.ok ||
+        !tokenData.access_token
+      ) {
+        console.error(
+          "Discord token error:",
+          tokenData
+        );
+
+        return res
+          .status(502)
+          .send(
+            "Não foi possível autenticar com o Discord."
+          );
       }
-    );
 
-    const discordUser = await userResponse.json();
+      const userResponse = await fetch(
+        `${DISCORD_API}/users/@me`,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${tokenData.access_token}`
+          }
+        }
+      );
 
-    if (!userResponse.ok || !discordUser.id) {
-      console.error("Discord user error:", discordUser);
+      const discordUser =
+        await userResponse.json();
 
-      return res
-        .status(502)
-        .send("Não foi possível obter seu Discord.");
+      if (
+        !userResponse.ok ||
+        !discordUser.id
+      ) {
+        console.error(
+          "Discord user error:",
+          discordUser
+        );
+
+        return res
+          .status(502)
+          .send(
+            "Não foi possível obter seu Discord."
+          );
+      }
+
+      const session = createSignedData({
+        id: discordUser.id,
+        username: discordUser.username,
+        global_name:
+          discordUser.global_name || null,
+        avatar:
+          discordUser.avatar || null,
+        createdAt: Date.now()
+      });
+
+      res.setHeader(
+        "Set-Cookie",
+        [
+          createCookie(
+            "eclipse_session",
+            session,
+            60 * 60 * 24 * 7
+          ),
+          "eclipse_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0"
+        ]
+      );
+
+      res.redirect(
+        "/?discord=connected"
+      );
+    } catch (error) {
+      console.error(
+        "OAuth2 callback error:",
+        error
+      );
+
+      res
+        .status(500)
+        .send(
+          "Erro interno durante o login com Discord."
+        );
     }
-
-    /*
-     * Guardamos somente os dados necessários.
-     * O token OAuth do Discord NÃO é salvo no cookie.
-     */
-
-    const session = createSignedData({
-      id: discordUser.id,
-      username: discordUser.username,
-      global_name: discordUser.global_name || null,
-      avatar: discordUser.avatar || null,
-      createdAt: Date.now()
-    });
-
-    res.setHeader(
-      "Set-Cookie",
-      [
-        createCookie(
-          "eclipse_session",
-          session,
-          60 * 60 * 24 * 7
-        ),
-        "eclipse_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0"
-      ]
-    );
-
-    res.redirect("/?discord=connected");
-  } catch (error) {
-    console.error("OAuth2 callback error:", error);
-
-    res
-      .status(500)
-      .send("Erro interno durante o login com Discord.");
   }
-});
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -273,11 +322,13 @@ app.get("/api/discord/callback", async (req, res) => {
 */
 
 app.get("/api/discord/me", (req, res) => {
-  const cookies = readCookies(req);
+  const cookies =
+    readCookies(req);
 
-  const session = readSignedData(
-    cookies.eclipse_session
-  );
+  const session =
+    readSignedData(
+      cookies.eclipse_session
+    );
 
   if (!session) {
     return res.json({
@@ -290,8 +341,10 @@ app.get("/api/discord/me", (req, res) => {
     user: {
       id: session.id,
       username: session.username,
-      global_name: session.global_name,
-      avatar: session.avatar
+      global_name:
+        session.global_name,
+      avatar:
+        session.avatar
     }
   });
 });
@@ -302,15 +355,38 @@ app.get("/api/discord/me", (req, res) => {
 |--------------------------------------------------------------------------
 */
 
-app.post("/api/discord/logout", (req, res) => {
-  res.setHeader(
-    "Set-Cookie",
-    "eclipse_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0"
-  );
+app.post(
+  "/api/discord/logout",
+  (req, res) => {
+    res.setHeader(
+      "Set-Cookie",
+      "eclipse_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0"
+    );
 
-  res.json({
-    success: true
-  });
+    res.json({
+      success: true
+    });
+  }
+);
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN PAGE
+|--------------------------------------------------------------------------
+|
+| IMPORTANTE:
+| Esta rota precisa ficar ANTES do app.get("*").
+|
+*/
+
+app.get("/admin", (req, res) => {
+  res.sendFile(
+    path.join(
+      __dirname,
+      "public",
+      "admin.html"
+    )
+  );
 });
 
 /*
@@ -321,18 +397,35 @@ app.post("/api/discord/logout", (req, res) => {
 
 app.get("*", (req, res) => {
   res.sendFile(
-    path.join(__dirname, "public", "index.html")
+    path.join(
+      __dirname,
+      "public",
+      "index.html"
+    )
   );
 });
 
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 3000;
+/*
+|--------------------------------------------------------------------------
+| Local Development
+|--------------------------------------------------------------------------
+*/
 
-  app.listen(PORT, () => {
-    console.log(
-      `Eclipse Key System rodando na porta ${PORT}`
-    );
-  });
+if (
+  process.env.NODE_ENV !==
+  "production"
+) {
+  const PORT =
+    process.env.PORT || 3000;
+
+  app.listen(
+    PORT,
+    () => {
+      console.log(
+        `Eclipse Key System rodando na porta ${PORT}`
+      );
+    }
+  );
 }
 
 module.exports = app;

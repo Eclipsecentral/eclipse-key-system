@@ -26,13 +26,14 @@ const copyKeyBtn =
 const generatedKey =
   document.getElementById("generatedKey");
 
+let lootlabsPolling = null;
+
 
 /* =========================================
    MENU MOBILE
 ========================================= */
 
 function openMenu() {
-
   sidebar?.classList.add("open");
 
   document.body.classList.add("menu-open");
@@ -45,7 +46,6 @@ function openMenu() {
 
 
 function closeMenu() {
-
   sidebar?.classList.remove("open");
 
   document.body.classList.remove("menu-open");
@@ -58,7 +58,6 @@ function closeMenu() {
 
 
 function toggleMenu() {
-
   if (
     sidebar?.classList.contains("open")
   ) {
@@ -66,7 +65,6 @@ function toggleMenu() {
   } else {
     openMenu();
   }
-
 }
 
 
@@ -80,6 +78,7 @@ menuBtn?.addEventListener(
  * Tocar/clicar fora das categorias
  * fecha o menu.
  */
+
 menuOverlay?.addEventListener(
   "click",
   closeMenu
@@ -89,6 +88,7 @@ menuOverlay?.addEventListener(
 /*
  * ESC fecha o menu.
  */
+
 document.addEventListener(
   "keydown",
   event => {
@@ -208,6 +208,7 @@ shineCards.forEach(card => {
     /*
      * Reinicia a animação.
      */
+
     void card.offsetWidth;
 
 
@@ -234,6 +235,7 @@ shineCards.forEach(card => {
    * Mouse:
    * um brilho por entrada.
    */
+
   card.addEventListener(
     "mouseenter",
     triggerShine
@@ -243,6 +245,7 @@ shineCards.forEach(card => {
   /*
    * Libera depois de sair.
    */
+
   card.addEventListener(
     "mouseleave",
     () => {
@@ -257,6 +260,7 @@ shineCards.forEach(card => {
    * Celular:
    * um brilho por toque.
    */
+
   card.addEventListener(
     "touchstart",
     () => {
@@ -541,6 +545,129 @@ discordLogoutBtn?.addEventListener(
 
 
 /* =========================================
+   LOOTLABS
+========================================= */
+
+async function startLootLabs() {
+
+  if (!generateKeyBtn) {
+    return;
+  }
+
+
+  generateKeyBtn.disabled =
+    true;
+
+
+  generateKeyBtn.innerHTML = `
+    <svg viewBox="0 0 24 24">
+      <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+    </svg>
+    Preparando...
+  `;
+
+
+  if (generatedKey) {
+
+    generatedKey.textContent =
+      "Preparando acesso...";
+
+  }
+
+
+  if (copyKeyBtn) {
+
+    copyKeyBtn.disabled =
+      true;
+
+  }
+
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/lootlabs/create",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          credentials: "include",
+
+          cache: "no-store"
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Não foi possível iniciar o LootLabs."
+      );
+
+    }
+
+
+    if (!data.url) {
+
+      throw new Error(
+        "O LootLabs não retornou um link."
+      );
+
+    }
+
+
+    /*
+     * Redireciona o usuário para o LootLabs.
+     */
+
+    window.location.href =
+      data.url;
+
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao iniciar LootLabs:",
+      error
+    );
+
+
+    if (generatedKey) {
+
+      generatedKey.textContent =
+        error.message ||
+        "Erro ao iniciar LootLabs.";
+
+    }
+
+
+    generateKeyBtn.disabled =
+      false;
+
+
+    generateKeyBtn.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+      </svg>
+      Gerar Key
+    `;
+
+  }
+
+}
+
+
+/* =========================================
    GERAR KEY
 ========================================= */
 
@@ -548,90 +675,15 @@ generateKeyBtn?.addEventListener(
   "click",
   async () => {
 
-    generateKeyBtn.disabled =
-      true;
+    /*
+     * Agora o botão NÃO gera a key
+     * diretamente.
+     *
+     * Primeiro manda o usuário
+     * para o LootLabs.
+     */
 
-
-    generateKeyBtn.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
-      </svg>
-      Gerando...
-    `;
-
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/keys/generate",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            credentials: "include",
-
-            cache: "no-store"
-          }
-        );
-
-
-      const data =
-        await response.json();
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          data.error ||
-          "Não foi possível gerar a key."
-        );
-
-      }
-
-
-      generatedKey.textContent =
-        data.key;
-
-
-      copyKeyBtn.disabled =
-        false;
-
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao gerar key:",
-        error
-      );
-
-
-      generatedKey.textContent =
-        error.message ||
-        "Erro ao gerar key.";
-
-
-      copyKeyBtn.disabled =
-        true;
-
-    } finally {
-
-      generateKeyBtn.disabled =
-        false;
-
-
-      generateKeyBtn.innerHTML = `
-        <svg viewBox="0 0 24 24">
-          <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
-        </svg>
-        Gerar Key
-      `;
-
-    }
+    await startLootLabs();
 
   }
 );
@@ -652,7 +704,11 @@ copyKeyBtn?.addEventListener(
     if (
       !key ||
       key === "Aguardando geração..." ||
-      key.startsWith("Erro")
+      key === "Preparando acesso..." ||
+      key === "Verificando conclusão..." ||
+      key === "Aguardando confirmação do LootLabs..." ||
+      key.startsWith("Erro") ||
+      key.startsWith("Não foi possível")
     ) {
       return;
     }
@@ -810,7 +866,221 @@ copyPixMainBtn?.addEventListener(
 
 
 /* =========================================
-   DISCORD CALLBACK
+   RETORNO DO LOOTLABS
+========================================= */
+
+async function checkLootLabsStatus(token) {
+
+  if (!token) {
+    return false;
+  }
+
+
+  try {
+
+    const response =
+      await fetch(
+        `/api/lootlabs/status?token=${encodeURIComponent(token)}`,
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store"
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Erro verificando o LootLabs."
+      );
+
+    }
+
+
+    if (
+      data.completed &&
+      data.key
+    ) {
+
+      if (generatedKey) {
+
+        generatedKey.textContent =
+          data.key;
+
+      }
+
+
+      if (copyKeyBtn) {
+
+        copyKeyBtn.disabled =
+          false;
+
+      }
+
+
+      if (generateKeyBtn) {
+
+        generateKeyBtn.disabled =
+          false;
+
+        generateKeyBtn.innerHTML = `
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+          </svg>
+          Gerar Key
+        `;
+
+      }
+
+
+      return true;
+    }
+
+
+    if (generatedKey) {
+
+      generatedKey.textContent =
+        "Aguardando confirmação do LootLabs...";
+
+    }
+
+
+    return false;
+
+
+  } catch (error) {
+
+    console.error(
+      "Erro verificando LootLabs:",
+      error
+    );
+
+    return false;
+  }
+
+}
+
+
+async function startLootLabsPolling(token) {
+
+  if (!token) {
+    return;
+  }
+
+
+  if (lootlabsPolling) {
+
+    clearInterval(
+      lootlabsPolling
+    );
+
+    lootlabsPolling = null;
+
+  }
+
+
+  let attempts = 0;
+
+  /*
+   * Faz uma verificação imediatamente.
+   */
+
+  const completed =
+    await checkLootLabsStatus(
+      token
+    );
+
+
+  if (completed) {
+    return;
+  }
+
+
+  /*
+   * Depois verifica a cada 3 segundos.
+   */
+
+  lootlabsPolling =
+    setInterval(
+      async () => {
+
+        attempts++;
+
+
+        const completed =
+          await checkLootLabsStatus(
+            token
+          );
+
+
+        if (completed) {
+
+          clearInterval(
+            lootlabsPolling
+          );
+
+          lootlabsPolling =
+            null;
+
+          return;
+
+        }
+
+
+        /*
+         * 60 tentativas =
+         * aproximadamente 3 minutos.
+         */
+
+        if (attempts >= 60) {
+
+          clearInterval(
+            lootlabsPolling
+          );
+
+          lootlabsPolling =
+            null;
+
+
+          if (generatedKey) {
+
+            generatedKey.textContent =
+              "Não foi possível confirmar a conclusão. Tente novamente.";
+
+          }
+
+
+          if (generateKeyBtn) {
+
+            generateKeyBtn.disabled =
+              false;
+
+            generateKeyBtn.innerHTML = `
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+              </svg>
+              Tentar novamente
+            `;
+
+          }
+
+        }
+
+      },
+      3000
+    );
+
+}
+
+
+/* =========================================
+   CALLBACKS
 ========================================= */
 
 const params =
@@ -819,7 +1089,115 @@ const params =
   );
 
 
+/*
+ * Retorno do LootLabs.
+ */
+
 if (
+  params.get("lootlabs") ===
+  "return"
+) {
+
+  const token =
+    params.get("token");
+
+
+  /*
+   * Limpa a URL.
+   */
+
+  window.history.replaceState(
+    {},
+    document.title,
+    window.location.pathname
+  );
+
+
+  /*
+   * Abre a página Obter Key.
+   */
+
+  openPage("key");
+
+
+  /*
+   * Mostra estado de verificação.
+   */
+
+  if (generatedKey) {
+
+    generatedKey.textContent =
+      "Verificando conclusão...";
+
+  }
+
+
+  if (copyKeyBtn) {
+
+    copyKeyBtn.disabled =
+      true;
+
+  }
+
+
+  if (generateKeyBtn) {
+
+    generateKeyBtn.disabled =
+      true;
+
+    generateKeyBtn.innerHTML = `
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3L14 8L19 10L14 12L12 17L10 12L12 17L10 12L5 10L10 8L12 3Z"/>
+      </svg>
+      Verificando...
+    `;
+
+  }
+
+
+  /*
+   * Começa a verificar se o LootLabs
+   * confirmou a conclusão.
+   */
+
+  if (token) {
+
+    startLootLabsPolling(
+      token
+    );
+
+  } else {
+
+    if (generatedKey) {
+
+      generatedKey.textContent =
+        "Sessão LootLabs inválida.";
+
+    }
+
+
+    if (generateKeyBtn) {
+
+      generateKeyBtn.disabled =
+        false;
+
+      generateKeyBtn.innerHTML = `
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3L14 8L19 10L14 12L12 17L10 12L12 17L10 12L5 10L10 8L12 3Z"/>
+        </svg>
+        Gerar Key
+      `;
+
+    }
+
+  }
+
+
+/*
+ * Retorno do Discord.
+ */
+
+} else if (
   params.get("discord") ===
   "connected"
 ) {
@@ -833,7 +1211,9 @@ if (
 
   openPage("key");
 
+
   loadDiscord();
+
 
 } else {
 

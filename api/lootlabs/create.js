@@ -61,6 +61,12 @@ module.exports = async (req, res) => {
   }
 
   try {
+    /*
+     * ============================================================
+     * CONFIGURAÇÃO
+     * ============================================================
+     */
+
     if (!SUPABASE_URL || !SUPABASE_KEY) {
       return res.status(500).json({
         success: false,
@@ -77,7 +83,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 1. PEGAR A SESSÃO DO NAVEGADOR
+     * 1. PEGAR SESSÃO
      * ============================================================
      */
 
@@ -92,10 +98,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 2. VALIDAR A SESSÃO PELO NOSSO /api/discord/me
-     *
-     * Não tentamos interpretar o cookie manualmente.
-     * O endpoint que já funciona no seu sistema faz isso.
+     * 2. VALIDAR DISCORD
      * ============================================================
      */
 
@@ -150,7 +153,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 3. CRIAR TOKEN DA SESSÃO LOOTLABS
+     * 3. CRIAR TOKEN
      * ============================================================
      */
 
@@ -158,7 +161,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 4. SALVAR SESSÃO NO SUPABASE
+     * 4. SALVAR SESSÃO
      * ============================================================
      */
 
@@ -205,7 +208,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 6. CRIAR LINK NO LOOTLABS
+     * 6. CRIAR LINK LOOTLABS
      * ============================================================
      */
 
@@ -217,7 +220,10 @@ module.exports = async (req, res) => {
       theme: 1
     };
 
-    console.log("Enviando para LootLabs:", payload);
+    console.log(
+      "Enviando para LootLabs:",
+      payload
+    );
 
     const lootlabsResponse = await fetch(
       "https://creators.lootlabs.gg/api/public/content_locker",
@@ -260,7 +266,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 7. ERRO DO LOOTLABS
+     * 7. LOOTLABS RECUSOU
      * ============================================================
      */
 
@@ -268,55 +274,139 @@ module.exports = async (req, res) => {
       return res.status(502).json({
         success: false,
         error: "LootLabs recusou a criação do link",
-        lootlabs_status: lootlabsResponse.status,
-        lootlabs_response: lootlabsData
+
+        lootlabs_status:
+          lootlabsResponse.status,
+
+        lootlabs_type:
+          lootlabsData?.type || null,
+
+        lootlabs_message:
+          lootlabsData?.message || null,
+
+        lootlabs_response:
+          lootlabsData
       });
     }
 
     /*
      * ============================================================
-     * 8. PEGAR LINK GERADO
+     * 8. PEGAR URL DO LOOTLABS
      * ============================================================
      */
 
-    let lootUrl =
-      lootlabsData?.message?.loot_url ||
-      lootlabsData?.message?.url ||
-      lootlabsData?.loot_url ||
-      lootlabsData?.url ||
-      lootlabsData?.link;
+    let lootUrl = null;
+
+    if (
+      lootlabsData &&
+      lootlabsData.message &&
+      typeof lootlabsData.message === "object"
+    ) {
+      lootUrl =
+        lootlabsData.message.loot_url ||
+        lootlabsData.message.url ||
+        lootlabsData.message.short ||
+        null;
+    }
+
+    if (!lootUrl) {
+      lootUrl =
+        lootlabsData?.loot_url ||
+        lootlabsData?.url ||
+        lootlabsData?.link ||
+        null;
+    }
+
+    /*
+     * ============================================================
+     * 9. DEBUG CASO NÃO ENCONTRE
+     * ============================================================
+     */
 
     if (!lootUrl) {
       console.error(
-        "LootLabs não retornou URL:",
+        "================================="
+      );
+
+      console.error(
+        "LOOTLABS NÃO RETORNOU LOOT_URL"
+      );
+
+      console.error(
+        "STATUS:",
+        lootlabsResponse.status
+      );
+
+      console.error(
+        "TIPO:",
+        lootlabsData?.type
+      );
+
+      console.error(
+        "MENSAGEM:",
+        lootlabsData?.message
+      );
+
+      console.error(
+        "RESPOSTA COMPLETA:",
         lootlabsData
+      );
+
+      console.error(
+        "================================="
       );
 
       return res.status(502).json({
         success: false,
-        error: "LootLabs não retornou o link",
-        lootlabs_response: lootlabsData
+
+        error:
+          "LootLabs não retornou o link",
+
+        lootlabs_status:
+          lootlabsResponse.status,
+
+        lootlabs_type:
+          lootlabsData?.type || null,
+
+        lootlabs_message:
+          lootlabsData?.message || null,
+
+        lootlabs_response:
+          lootlabsData
       });
     }
 
     /*
      * ============================================================
-     * 9. ADICIONAR PUID
+     * 10. ADICIONAR PUID
      * ============================================================
      */
 
-    const lootLink = new URL(lootUrl);
+    try {
+      const lootLink = new URL(lootUrl);
 
-    lootLink.searchParams.set(
-      "puid",
-      token
-    );
+      lootLink.searchParams.set(
+        "puid",
+        token
+      );
 
-    lootUrl = lootLink.toString();
+      lootUrl = lootLink.toString();
+
+    } catch (error) {
+      console.error(
+        "Erro ao processar URL LootLabs:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        error: "URL retornada pelo LootLabs é inválida"
+      });
+    }
 
     /*
      * ============================================================
-     * 10. RETORNAR AO SITE
+     * 11. RETORNAR PARA O SITE
      * ============================================================
      */
 

@@ -4,7 +4,8 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const LOOTLABS_API_KEY = process.env.LOOTLABS_API_KEY;
 
-const SITE_URL = "https://eclipse-key-system.vercel.app";
+const SITE_URL =
+  process.env.SITE_URL || "https://eclipse-key-system.vercel.app";
 
 function getCookie(req, name) {
   const cookies = req.headers.cookie || "";
@@ -12,16 +13,81 @@ function getCookie(req, name) {
   const match = cookies.match(
     new RegExp(
       "(?:^|;\\s*)" +
-      name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
-      "=([^;]*)"
+        name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+        "=([^;]*)"
     )
   );
 
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+function verifySession(session) {
+  try {
+    if (!session || !process.env.SESSION_SECRET) {
+      return null;
+    }
+
+    const parts = session.split(".");
+
+    if (parts.length !== 2) {
+      return null;
+    }
+
+    const [payload, signature] = parts;
+
+    const expected = crypto
+      .createHmac("sha256", process.env.SESSION_SECRET)
+      .update(payload)
+      .digest("base64url");
+
+    if (signature !== expected) {
+      return null;
+    }
+
+    const data = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8")
+    );
+
+    if (!data || !data.user) {
+      return null;
+    }
+
+    return data.user;
+  } catch (error) {
+    console.error("Erro ao verificar sessão:", error);
+    return null;
+  }
+}
+
 function generateToken() {
   return crypto.randomBytes(32).toString("hex");
+}
+
+async function supabaseRequest(path, options = {}) {
+  const response = await fetch(`${SUPABASE_URL}${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  const text = await response.text();
+
+  let data;
+
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+
+  return {
+    response,
+    data
+  };
 }
 
 module.exports = async (req, res) => {
@@ -43,76 +109,33 @@ module.exports = async (req, res) => {
     if (!LOOTLABS_API_KEY) {
       return res.status(500).json({
         success: false,
-        error: "LOOTLABS_API_KEY não configurada"
+        error: "LootLabs não configurado"
       });
     }
 
     /*
-     * Pega a sessão atual do navegador.
+     * ============================================================
+     * 1. PEGAR SESSÃO DO DISCORD
+     * ============================================================
      */
-    const sessionCookie = getCookie(
-      req,
-      "eclipse_session"
-    );
 
-    if (!sessionCookie) {
+    const session = getCookie(req, "eclipse_session");
+
+    if (!session) {
       return res.status(401).json({
         success: false,
         error: "Discord não conectado"
       });
     }
 
-    /*
-     * Valida a sessão usando a própria API
-     * que já funciona no site.
-     */
-    const meResponse = await fetch(
-      `${SITE_URL}/api/discord/me`,
-      {
-        method: "GET",
-        headers: {
-          Cookie: `eclipse_session=${encodeURIComponent(sessionCookie)}`
-        },
-        cache: "no-store"
-      }
-    );
+    const user = verifySession(session);
 
-    const meText = await meResponse.text();
-
-    let meData;
-
-    try {
-      meData = JSON.parse(meText);
-    } catch {
-      console.error(
-        "Discord /me retornou:",
-        meText
-      );
-
+    if (!user || !user.id) {
       return res.status(401).json({
         success: false,
-        error: "Não foi possível validar o Discord"
+        error: "Sessão inválida"
       });
     }
-
-    console.log(
-      "Discord session:",
-      meResponse.status,
-      meData.authenticated
-    );
-
-    if (
-      !meResponse.ok ||
-      meData.authenticated !== true ||
-      !meData.user
-    ) {
-      return res.status(401).json({
-        success: false,
-        error: "Discord não conectado"
-      });
-    }
-
-    const user = meData.user;
 
     const discordId = String(user.id);
 
@@ -122,44 +145,34 @@ module.exports = async (req, res) => {
       "Desconhecido";
 
     /*
-     * Token exclusivo dessa tentativa.
+     * ============================================================
+     * 2. CRIAR TOKEN ÚNICO DA SESSÃO LOOTLABS
+     * ============================================================
      */
+
     const token = generateToken();
 
     /*
-     * Salva a sessão LootLabs.
-     *
-     * O nick fica salvo aqui porque depois,
-     * no Postback, precisamos registrar:
-     *
-     * DiscordID | Nick
+     * ============================================================
+     * 3. SALVAR SESSÃO NO SUPABASE
+     * ============================================================
      */
-    const sessionResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/lootlabs_sessions`,
-      {
+
+    const { response: sessionResponse, data: sessionData } =
+      await supabaseRequest("/rest/v1/lootlabs_sessions", {
         method: "POST",
         headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal"
+          Prefer: "return=representation"
         },
         body: JSON.stringify({
           token,
           discord_id: discordId,
           status: "pending"
         })
-      }
-    );
+      });
 
     if (!sessionResponse.ok) {
-      const errorText =
-        await sessionResponse.text();
-
-      console.error(
-        "Supabase lootlabs_sessions:",
-        errorText
-      );
+      console.error("Erro ao criar lootlabs_sessions:", sessionData);
 
       return res.status(500).json({
         success: false,
@@ -168,168 +181,156 @@ module.exports = async (req, res) => {
     }
 
     /*
-     * Página para onde o LootLabs devolverá o usuário.
+     * ============================================================
+     * 4. URL PARA ONDE O LOOTLABS VAI MANDAR O USUÁRIO
+     * ============================================================
      */
+
     const returnUrl =
       `${SITE_URL}/?lootlabs=return&token=${encodeURIComponent(token)}`;
 
     /*
-     * Parâmetros do Content Locker.
+     * ============================================================
+     * 5. CRIAR LINK NO LOOTLABS
+     *
+     * API OFICIAL:
+     * POST /api/public/content_locker
+     *
+     * Authorization:
+     * Bearer LOOTLABS_API_KEY
+     * ============================================================
      */
-    const params = new URLSearchParams();
 
-    params.set(
-      "api_token",
-      LOOTLABS_API_KEY
-    );
+    const lootlabsPayload = {
+      title: "Eclipse Hub - Obter Key",
+      url: returnUrl,
+      tier_id: 1,
+      number_of_tasks: 3,
+      theme: 1
+    };
 
-    params.set(
-      "title",
-      "Eclipse Hub - Obter Key"
-    );
+    console.log("Criando link LootLabs:", {
+      discordId,
+      token,
+      returnUrl,
+      payload: lootlabsPayload
+    });
 
-    params.set(
-      "url",
-      returnUrl
-    );
-
-    params.set(
-      "tier_id",
-      "1"
-    );
-
-    params.set(
-      "number_of_tasks",
-      "3"
-    );
-
-    params.set(
-      "theme",
-      "1"
-    );
-
-    const lootLabsEndpoint =
-      "https://creators.lootlabs.gg/api/public/content_locker";
-
-    const lootLabsUrl =
-      `${lootLabsEndpoint}?${params.toString()}`;
-
-    console.log(
-      "Criando LootLabs..."
-    );
-
-    const lootResponse = await fetch(
-      lootLabsUrl,
+    const lootlabsResponse = await fetch(
+      "https://creators.lootlabs.gg/api/public/content_locker",
       {
-        method: "GET",
+        method: "POST",
         headers: {
+          Authorization: `Bearer ${LOOTLABS_API_KEY}`,
+          "Content-Type": "application/json",
           Accept: "application/json"
-        }
+        },
+        body: JSON.stringify(lootlabsPayload)
       }
     );
 
-    const rawText =
-      await lootResponse.text();
+    const rawText = await lootlabsResponse.text();
 
-    console.log(
-      "LootLabs status:",
-      lootResponse.status
-    );
-
-    console.log(
-      "LootLabs response:",
-      rawText
-    );
-
-    let lootData;
+    let lootlabsData;
 
     try {
-      lootData = JSON.parse(rawText);
+      lootlabsData = rawText ? JSON.parse(rawText) : null;
     } catch {
-      return res.status(502).json({
-        success: false,
-        error:
-          "LootLabs retornou uma resposta inválida"
-      });
+      lootlabsData = {
+        raw: rawText
+      };
     }
 
-    if (!lootResponse.ok) {
-      return res.status(502).json({
-        success: false,
-        error:
-          lootData.message ||
-          lootData.error ||
-          "LootLabs recusou a criação do link"
-      });
-    }
+    console.log("LootLabs HTTP:", lootlabsResponse.status);
+    console.log("LootLabs resposta:", lootlabsData);
 
-    if (
-      lootData.type === "error" ||
-      lootData.success === false
-    ) {
+    /*
+     * ============================================================
+     * 6. VERIFICAR ERRO DO LOOTLABS
+     * ============================================================
+     */
+
+    if (!lootlabsResponse.ok) {
       return res.status(502).json({
         success: false,
-        error:
-          lootData.message ||
-          lootData.error ||
-          "LootLabs recusou a criação do link"
+        error: "LootLabs recusou a criação do link",
+        lootlabs_status: lootlabsResponse.status,
+        lootlabs_response: lootlabsData
       });
     }
 
     /*
-     * LootLabs pode retornar o link em formatos
-     * diferentes dependendo da versão da API.
+     * ============================================================
+     * 7. PEGAR URL GERADA PELO LOOTLABS
+     * ============================================================
      */
-    const lootUrl =
-      lootData?.message?.loot_url ||
-      lootData?.message?.url ||
-      lootData?.loot_url ||
-      lootData?.url;
+
+    let lootUrl =
+      lootlabsData?.message?.loot_url ||
+      lootlabsData?.message?.url ||
+      lootlabsData?.loot_url ||
+      lootlabsData?.url ||
+      lootlabsData?.link;
 
     if (!lootUrl) {
       console.error(
-        "LootLabs sem URL:",
-        lootData
+        "LootLabs não retornou uma URL:",
+        lootlabsData
       );
 
       return res.status(502).json({
         success: false,
-        error:
-          "LootLabs não retornou o link de acesso"
+        error: "LootLabs não retornou o link",
+        lootlabs_response: lootlabsData
       });
     }
 
     /*
-     * O puid será usado pelo Postback
-     * como click_id.
+     * ============================================================
+     * 8. ADICIONAR PUID
+     *
+     * O LootLabs envia esse valor posteriormente
+     * como click_id no Postback.
+     * ============================================================
      */
-    const separator =
-      lootUrl.includes("?")
-        ? "&"
-        : "?";
 
-    const finalLootUrl =
-      `${lootUrl}${separator}puid=${encodeURIComponent(token)}`;
+    try {
+      const url = new URL(lootUrl);
+
+      url.searchParams.set("puid", token);
+
+      lootUrl = url.toString();
+    } catch (error) {
+      console.error("Erro ao adicionar puid:", error);
+
+      return res.status(500).json({
+        success: false,
+        error: "Link LootLabs inválido"
+      });
+    }
+
+    /*
+     * ============================================================
+     * 9. RETORNAR LINK PARA O FRONT-END
+     * ============================================================
+     */
 
     return res.status(200).json({
       success: true,
-      url: finalLootUrl,
+      url: lootUrl,
       token,
-      discord_id: discordId,
-      discord_nick: discordNick
+      discord: {
+        id: discordId,
+        nick: discordNick
+      }
     });
 
   } catch (error) {
-    console.error(
-      "LootLabs create error:",
-      error
-    );
+    console.error("Erro geral em /api/lootlabs/create:", error);
 
     return res.status(500).json({
       success: false,
-      error:
-        error.message ||
-        "Erro interno"
+      error: "Erro interno ao criar o LootLabs"
     });
   }
 };

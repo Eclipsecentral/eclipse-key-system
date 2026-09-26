@@ -1,587 +1,439 @@
-const navItems = document.querySelectorAll(".nav-item");
-const pages = document.querySelectorAll(".page");
-
-const sidebar = document.getElementById("sidebar");
-const menuBtn = document.getElementById("menuBtn");
-const menuOverlay = document.getElementById("menuOverlay");
-
-const discordStatus =
-  document.getElementById("discordStatus");
-
-const discordUser =
-  document.getElementById("discordUser");
-
-const discordLoginBtn =
-  document.getElementById("discordLoginBtn");
-
-const discordLogoutBtn =
-  document.getElementById("discordLogoutBtn");
-
-const generateKeyBtn =
-  document.getElementById("generateKeyBtn");
-
-const copyKeyBtn =
-  document.getElementById("copyKeyBtn");
-
-const generatedKey =
-  document.getElementById("generatedKey");
-
-let lootlabsPolling = null;
+const state = {
+  user: null,
+  currentPage: "home",
+  key: null,
+  lootlabsToken: null,
+  polling: false
+};
 
 
-/* =========================================
-   MENU MOBILE
-========================================= */
+// =====================================================
+// SITE STATUS
+// =====================================================
 
-function openMenu() {
-  sidebar?.classList.add("open");
+async function checkSiteStatus() {
+  try {
+    const response = await fetch(
+      "/api/site/status",
+      {
+        method: "GET",
+        cache: "no-store"
+      }
+    );
 
-  document.body.classList.add("menu-open");
+    const data = await response.json();
 
-  menuBtn?.setAttribute(
-    "aria-expanded",
-    "true"
-  );
-}
+    if (
+      data.success &&
+      data.site_enabled === false
+    ) {
+      document.body.innerHTML = `
+        <div style="
+          min-height:100vh;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding:24px;
+          background:#050608;
+          color:#fff;
+          font-family:Inter,Arial,sans-serif;
+          text-align:center;
+        ">
+          <div style="max-width:520px">
+            <div style="
+              font-size:13px;
+              font-weight:800;
+              letter-spacing:4px;
+              color:#8d96aa;
+              margin-bottom:18px;
+            ">
+              ECLIPSE HUB
+            </div>
 
+            <h1 style="
+              margin:0 0 14px;
+              font-size:32px;
+              line-height:1.15;
+            ">
+              Site temporariamente indisponível
+            </h1>
 
-function closeMenu() {
-  sidebar?.classList.remove("open");
+            <p style="
+              margin:0;
+              color:#8c94a8;
+              line-height:1.7;
+            ">
+              Estamos realizando uma manutenção.
+              Tente novamente mais tarde.
+            </p>
+          </div>
+        </div>
+      `;
 
-  document.body.classList.remove("menu-open");
-
-  menuBtn?.setAttribute(
-    "aria-expanded",
-    "false"
-  );
-}
-
-
-function toggleMenu() {
-  if (
-    sidebar?.classList.contains("open")
-  ) {
-    closeMenu();
-  } else {
-    openMenu();
-  }
-}
-
-
-menuBtn?.addEventListener(
-  "click",
-  toggleMenu
-);
-
-
-/*
- * Tocar/clicar fora das categorias
- * fecha o menu.
- */
-
-menuOverlay?.addEventListener(
-  "click",
-  closeMenu
-);
-
-
-/*
- * ESC fecha o menu.
- */
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (event.key === "Escape") {
-      closeMenu();
+      return false;
     }
 
+    return true;
+
+  } catch (error) {
+    console.error(
+      "Erro verificando status do site:",
+      error
+    );
+
+    return true;
   }
-);
+}
 
 
-/* =========================================
-   NAVEGAÇÃO
-========================================= */
+// =====================================================
+// DISCORD
+// =====================================================
 
-function openPage(pageName) {
-
-  pages.forEach(page => {
-
-    page.classList.toggle(
-      "active",
-      page.id === pageName
+async function loadDiscordUser() {
+  try {
+    const response = await fetch(
+      "/api/discord/me",
+      {
+        credentials: "include",
+        cache: "no-store"
+      }
     );
 
-  });
+    const data = await response.json();
 
+    if (
+      response.ok &&
+      data.authenticated &&
+      data.user
+    ) {
+      state.user = data.user;
+    } else {
+      state.user = null;
+    }
 
-  navItems.forEach(item => {
+    updateDiscordUI();
 
-    item.classList.toggle(
-      "active",
-      item.dataset.page === pageName
+  } catch (error) {
+    console.error(
+      "Erro Discord:",
+      error
     );
 
+    state.user = null;
+
+    updateDiscordUI();
+  }
+}
+
+
+// =====================================================
+// DISCORD UI
+// =====================================================
+
+function updateDiscordUI() {
+  const elements = document.querySelectorAll(
+    "[data-discord-status]"
+  );
+
+  elements.forEach(element => {
+
+    if (state.user) {
+      element.textContent =
+        "Discord conectado";
+      element.classList.add(
+        "connected"
+      );
+    } else {
+      element.textContent =
+        "Discord não conectado";
+      element.classList.remove(
+        "connected"
+      );
+    }
+
   });
+}
 
 
-  closeMenu();
+// =====================================================
+// NAVEGAÇÃO
+// =====================================================
 
+function navigate(page) {
+  state.currentPage = page;
+
+  document
+    .querySelectorAll("[data-page]")
+    .forEach(element => {
+      element.classList.toggle(
+        "active",
+        element.dataset.page === page
+      );
+    });
+
+  document
+    .querySelectorAll("[data-view]")
+    .forEach(element => {
+      element.style.display =
+        element.dataset.view === page
+          ? ""
+          : "none";
+    });
 
   window.scrollTo({
     top: 0,
     behavior: "smooth"
   });
 
+  closeSidebar();
 }
 
 
-navItems.forEach(item => {
+// =====================================================
+// SIDEBAR
+// =====================================================
 
-  item.addEventListener(
-    "click",
-    () => {
-      openPage(item.dataset.page);
-    }
+function openSidebar() {
+  document.body.classList.add(
+    "sidebar-open"
   );
+}
 
-});
+function closeSidebar() {
+  document.body.classList.remove(
+    "sidebar-open"
+  );
+}
 
+function setupSidebar() {
 
-document
-  .querySelectorAll("[data-page]")
-  .forEach(element => {
+  const menuButton =
+    document.querySelector(
+      "[data-menu]"
+    );
 
-    if (
-      element.classList.contains(
-        "nav-item"
-      )
-    ) {
-      return;
-    }
-
-    element.addEventListener(
+  if (menuButton) {
+    menuButton.addEventListener(
       "click",
-      () => {
-
-        openPage(
-          element.dataset.page
-        );
-
+      event => {
+        event.stopPropagation();
+        openSidebar();
       }
     );
+  }
 
-  });
+  document
+    .querySelectorAll(
+      "[data-sidebar-close]"
+    )
+    .forEach(element => {
+      element.addEventListener(
+        "click",
+        closeSidebar
+      );
+    });
 
+  document.addEventListener(
+    "click",
+    event => {
 
-/* =========================================
-   BRILHO DOS CARDS
-========================================= */
+      if (
+        !document.body.classList.contains(
+          "sidebar-open"
+        )
+      ) {
+        return;
+      }
 
-const shineCards =
-  document.querySelectorAll(
-    ".shine-card"
-  );
-
-
-shineCards.forEach(card => {
-
-  let touchLock = false;
-
-
-  function triggerShine() {
-
-    if (touchLock) {
-      return;
-    }
-
-    touchLock = true;
-
-
-    card.classList.remove(
-      "shine-active"
-    );
-
-
-    /*
-     * Reinicia a animação.
-     */
-
-    void card.offsetWidth;
-
-
-    card.classList.add(
-      "shine-active"
-    );
-
-
-    setTimeout(
-      () => {
-
-        card.classList.remove(
-          "shine-active"
+      const sidebar =
+        document.querySelector(
+          "[data-sidebar]"
         );
 
-      },
-      800
-    );
+      const menuButton =
+        document.querySelector(
+          "[data-menu]"
+        );
 
-  }
-
-
-  /*
-   * Mouse:
-   * um brilho por entrada.
-   */
-
-  card.addEventListener(
-    "mouseenter",
-    triggerShine
-  );
-
-
-  /*
-   * Libera depois de sair.
-   */
-
-  card.addEventListener(
-    "mouseleave",
-    () => {
-
-      touchLock = false;
+      if (
+        sidebar &&
+        !sidebar.contains(event.target) &&
+        !menuButton?.contains(event.target)
+      ) {
+        closeSidebar();
+      }
 
     }
   );
+}
 
 
-  /*
-   * Celular:
-   * um brilho por toque.
-   */
+// =====================================================
+// LINKS DE NAVEGAÇÃO
+// =====================================================
 
-  card.addEventListener(
-    "touchstart",
-    () => {
+function setupNavigation() {
 
-      triggerShine();
+  document
+    .querySelectorAll(
+      "[data-page]"
+    )
+    .forEach(element => {
 
-
-      setTimeout(
+      element.addEventListener(
+        "click",
         () => {
-
-          touchLock = false;
-
-        },
-        500
-      );
-
-    },
-    {
-      passive: true
-    }
-  );
-
-});
-
-
-/* =========================================
-   DISCORD
-========================================= */
-
-async function loadDiscord() {
-
-  if (
-    !discordStatus ||
-    !discordUser
-  ) {
-    return;
-  }
-
-
-  try {
-
-    const response =
-      await fetch(
-        "/api/discord/me",
-        {
-          credentials: "include",
-          cache: "no-store"
+          navigate(
+            element.dataset.page
+          );
         }
       );
 
-
-    const data =
-      await response.json();
-
-
-    if (
-      !data.authenticated
-    ) {
-
-      discordStatus.textContent =
-        "Discord não conectado";
-
-
-      discordUser.textContent =
-        "Conecte sua conta para continuar.";
-
-
-      if (discordLoginBtn) {
-
-        discordLoginBtn.hidden =
-          false;
-
-        discordLoginBtn.disabled =
-          false;
-
-        discordLoginBtn.textContent =
-          "Conectar Discord";
-
-        discordLoginBtn.style.opacity =
-          "";
-
-        discordLoginBtn.style.cursor =
-          "pointer";
-
-      }
-
-
-      if (discordLogoutBtn) {
-
-        discordLogoutBtn.hidden =
-          true;
-
-      }
-
-
-      return;
-    }
-
-
-    const user =
-      data.user;
-
-
-    discordStatus.textContent =
-      "Discord conectado";
-
-
-    discordUser.textContent =
-      user.global_name ||
-      user.username ||
-      user.id;
-
-
-    if (discordLoginBtn) {
-
-      discordLoginBtn.hidden =
-        true;
-
-      discordLoginBtn.disabled =
-        true;
-
-    }
-
-
-    if (discordLogoutBtn) {
-
-      discordLogoutBtn.hidden =
-        false;
-
-    }
-
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao verificar Discord:",
-      error
-    );
-
-
-    discordStatus.textContent =
-      "Erro ao verificar Discord";
-
-
-    discordUser.textContent =
-      "Atualize a página e tente novamente.";
-
-  }
-
+    });
 }
 
 
-/* =========================================
-   LOGIN DISCORD
-========================================= */
+// =====================================================
+// DISCORD LOGIN
+// =====================================================
 
-discordLoginBtn?.addEventListener(
-  "click",
-  () => {
+function setupDiscordLogin() {
+
+  document
+    .querySelectorAll(
+      "[data-discord-login]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+          window.location.href =
+            "/api/discord/login";
+        }
+      );
+
+    });
+}
+
+
+// =====================================================
+// DISCORD INVITE
+// =====================================================
+
+function setupDiscordInvite() {
+
+  document
+    .querySelectorAll(
+      "[data-discord-invite]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+          window.open(
+            "https://discord.gg/MZB9Fznp8B",
+            "_blank",
+            "noopener"
+          );
+        }
+      );
+
+    });
+}
+
+
+// =====================================================
+// LOGOUT
+// =====================================================
+
+async function logoutDiscord() {
+
+  try {
+    await fetch(
+      "/api/discord/logout",
+      {
+        method: "POST",
+        credentials: "include"
+      }
+    );
+  } catch (error) {
+    console.error(
+      "Erro logout:",
+      error
+    );
+  }
+
+  state.user = null;
+
+  await loadDiscordUser();
+}
+
+
+// =====================================================
+// BOTÃO DESVINCULAR
+// =====================================================
+
+function setupLogout() {
+
+  document
+    .querySelectorAll(
+      "[data-discord-logout]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          button.disabled = true;
+
+          await logoutDiscord();
+
+          button.disabled = false;
+        }
+      );
+
+    });
+}
+
+
+// =====================================================
+// CRIAR LOOTLABS
+// =====================================================
+
+async function startLootLabs() {
+
+  if (!state.user) {
 
     window.location.href =
       "/api/discord/login";
 
-  }
-);
-
-
-/* =========================================
-   DESVINCULAR DISCORD
-========================================= */
-
-discordLogoutBtn?.addEventListener(
-  "click",
-  async () => {
-
-    const originalText =
-      discordLogoutBtn.textContent;
-
-
-    discordLogoutBtn.disabled =
-      true;
-
-
-    discordLogoutBtn.textContent =
-      "Desvinculando...";
-
-
-    try {
-
-      const response =
-        await fetch(
-          "/api/discord/logout",
-          {
-            method: "POST",
-            credentials: "include"
-          }
-        );
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          "Não foi possível desvincular a conta."
-        );
-
-      }
-
-
-      if (generatedKey) {
-
-        generatedKey.textContent =
-          "Aguardando geração...";
-
-      }
-
-
-      if (copyKeyBtn) {
-
-        copyKeyBtn.disabled =
-          true;
-
-      }
-
-
-      await loadDiscord();
-
-
-      discordLogoutBtn.textContent =
-        "Desvinculada";
-
-
-      discordLogoutBtn.disabled =
-        false;
-
-
-      setTimeout(
-        () => {
-
-          if (
-            discordLogoutBtn
-          ) {
-
-            discordLogoutBtn.textContent =
-              "Desvincular";
-
-          }
-
-        },
-        1400
-      );
-
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao desvincular:",
-        error
-      );
-
-
-      discordLogoutBtn.textContent =
-        "Erro";
-
-
-      setTimeout(
-        () => {
-
-          discordLogoutBtn.textContent =
-            originalText;
-
-          discordLogoutBtn.disabled =
-            false;
-
-        },
-        1500
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================================
-   LOOTLABS
-========================================= */
-
-async function startLootLabs() {
-
-  if (!generateKeyBtn) {
     return;
   }
 
+  const button =
+    document.querySelector(
+      "[data-generate-key]"
+    );
 
-  generateKeyBtn.disabled =
-    true;
+  const status =
+    document.querySelector(
+      "[data-key-status]"
+    );
 
-
-  generateKeyBtn.innerHTML = `
-    <svg viewBox="0 0 24 24">
-      <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
-    </svg>
-    Preparando...
-  `;
-
-
-  if (generatedKey) {
-
-    generatedKey.textContent =
-      "Preparando acesso...";
-
+  if (button) {
+    button.disabled = true;
+    button.textContent =
+      "Preparando missão...";
   }
 
-
-  if (copyKeyBtn) {
-
-    copyKeyBtn.disabled =
-      true;
-
+  if (status) {
+    status.textContent =
+      "Preparando sua missão...";
   }
-
 
   try {
 
@@ -590,291 +442,88 @@ async function startLootLabs() {
         "/api/lootlabs/create",
         {
           method: "POST",
-
+          credentials: "include",
           headers: {
             "Content-Type":
               "application/json"
-          },
-
-          credentials: "include",
-
-          cache: "no-store"
+          }
         }
       );
-
 
     const data =
       await response.json();
 
-
-    if (!response.ok) {
-
+    if (
+      !response.ok ||
+      !data.success ||
+      !data.url
+    ) {
       throw new Error(
         data.error ||
-        "Não foi possível iniciar o LootLabs."
+        "Não foi possível criar a missão."
       );
-
     }
 
+    state.lootlabsToken =
+      data.token || null;
 
-    if (!data.url) {
-
-      throw new Error(
-        "O LootLabs não retornou um link."
-      );
-
+    if (status) {
+      status.textContent =
+        "Redirecionando para a missão...";
     }
-
-
-    /*
-     * Redireciona o usuário para o LootLabs.
-     */
 
     window.location.href =
       data.url;
 
-
   } catch (error) {
 
     console.error(
-      "Erro ao iniciar LootLabs:",
+      "Erro criando LootLabs:",
       error
     );
 
-
-    if (generatedKey) {
-
-      generatedKey.textContent =
-        error.message ||
-        "Erro ao iniciar LootLabs.";
-
+    if (status) {
+      status.textContent =
+        error.message;
     }
 
-
-    generateKeyBtn.disabled =
-      false;
-
-
-    generateKeyBtn.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
-      </svg>
-      Gerar Key
-    `;
-
+    if (button) {
+      button.disabled = false;
+      button.textContent =
+        "Gerar Key";
+    }
   }
-
 }
 
 
-/* =========================================
-   GERAR KEY
-========================================= */
+// =====================================================
+// GERAR KEY
+// =====================================================
 
-generateKeyBtn?.addEventListener(
-  "click",
-  async () => {
+function setupGenerateKey() {
 
-    /*
-     * Agora o botão NÃO gera a key
-     * diretamente.
-     *
-     * Primeiro manda o usuário
-     * para o LootLabs.
-     */
+  document
+    .querySelectorAll(
+      "[data-generate-key]"
+    )
+    .forEach(button => {
 
-    await startLootLabs();
-
-  }
-);
-
-
-/* =========================================
-   COPIAR KEY
-========================================= */
-
-copyKeyBtn?.addEventListener(
-  "click",
-  async () => {
-
-    const key =
-      generatedKey.textContent.trim();
-
-
-    if (
-      !key ||
-      key === "Aguardando geração..." ||
-      key === "Preparando acesso..." ||
-      key === "Verificando conclusão..." ||
-      key === "Aguardando confirmação do LootLabs..." ||
-      key.startsWith("Erro") ||
-      key.startsWith("Não foi possível")
-    ) {
-      return;
-    }
-
-
-    try {
-
-      await navigator.clipboard
-        .writeText(key);
-
-
-      const original =
-        copyKeyBtn.innerHTML;
-
-
-      copyKeyBtn.innerHTML = `
-        <svg viewBox="0 0 24 24">
-          <path d="M5 12L10 17L19 7"/>
-        </svg>
-        Key copiada
-      `;
-
-
-      setTimeout(
-        () => {
-
-          copyKeyBtn.innerHTML =
-            original;
-
-        },
-        1600
+      button.addEventListener(
+        "click",
+        startLootLabs
       );
 
-
-    } catch (error) {
-
-      console.error(
-        "Erro ao copiar key:",
-        error
-      );
-
-    }
-
-  }
-);
-
-
-/* =========================================
-   PIX
-========================================= */
-
-const pixKey =
-  document.getElementById("pixKey");
-
-const copyPixBtn =
-  document.getElementById("copyPixBtn");
-
-const copyPixMainBtn =
-  document.getElementById(
-    "copyPixMainBtn"
-  );
-
-
-async function copyPixKey(button) {
-
-  if (!pixKey) {
-    return;
-  }
-
-
-  const key =
-    pixKey.textContent.trim();
-
-
-  if (!key) {
-    return;
-  }
-
-
-  try {
-
-    await navigator.clipboard
-      .writeText(key);
-
-
-    if (!button) {
-      return;
-    }
-
-
-    const original =
-      button.innerHTML;
-
-
-    button.classList.add(
-      "success"
-    );
-
-
-    button.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M5 12L10 17L19 7"/>
-      </svg>
-      Copiado!
-    `;
-
-
-    setTimeout(
-      () => {
-
-        button.classList.remove(
-          "success"
-        );
-
-        button.innerHTML =
-          original;
-
-      },
-      1800
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Erro ao copiar Pix:",
-      error
-    );
-
-  }
-
+    });
 }
 
 
-copyPixBtn?.addEventListener(
-  "click",
-  () => {
+// =====================================================
+// STATUS DA SESSÃO
+// =====================================================
 
-    copyPixKey(copyPixBtn);
-
-  }
-);
-
-
-copyPixMainBtn?.addEventListener(
-  "click",
-  () => {
-
-    copyPixKey(
-      copyPixMainBtn
-    );
-
-  }
-);
-
-
-/* =========================================
-   RETORNO DO LOOTLABS
-========================================= */
-
-async function checkLootLabsStatus(token) {
-
-  if (!token) {
-    return false;
-  }
-
+async function checkLootLabsStatus(
+  token
+) {
 
   try {
 
@@ -888,335 +537,497 @@ async function checkLootLabsStatus(token) {
         }
       );
 
-
     const data =
       await response.json();
 
-
-    if (!response.ok) {
-
-      throw new Error(
-        data.error ||
-        "Erro verificando o LootLabs."
-      );
-
-    }
-
-
     if (
+      response.ok &&
       data.completed &&
       data.key
     ) {
 
-      if (generatedKey) {
+      state.key =
+        data.key;
 
-        generatedKey.textContent =
-          data.key;
-
-      }
-
-
-      if (copyKeyBtn) {
-
-        copyKeyBtn.disabled =
-          false;
-
-      }
-
-
-      if (generateKeyBtn) {
-
-        generateKeyBtn.disabled =
-          false;
-
-        generateKeyBtn.innerHTML = `
-          <svg viewBox="0 0 24 24">
-            <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
-          </svg>
-          Gerar Key
-        `;
-
-      }
-
+      showGeneratedKey(
+        data.key
+      );
 
       return true;
     }
 
+  } catch (error) {
 
-    if (generatedKey) {
+    console.error(
+      "Erro verificando Key:",
+      error
+    );
 
-      generatedKey.textContent =
-        "Aguardando confirmação do LootLabs...";
+  }
 
+  return false;
+}
+
+
+// =====================================================
+// POLLING
+// =====================================================
+
+async function pollLootLabs(
+  token
+) {
+
+  if (state.polling) {
+    return;
+  }
+
+  state.polling = true;
+
+  const status =
+    document.querySelector(
+      "[data-key-status]"
+    );
+
+  const start =
+    Date.now();
+
+  const timeout =
+    10 * 60 * 1000;
+
+  while (
+    Date.now() - start <
+    timeout
+  ) {
+
+    const completed =
+      await checkLootLabsStatus(
+        token
+      );
+
+    if (completed) {
+
+      state.polling = false;
+
+      return;
     }
 
+    if (status) {
+      status.textContent =
+        "Aguardando confirmação do LootLabs...";
+    }
 
-    return false;
+    await new Promise(
+      resolve =>
+        setTimeout(
+          resolve,
+          3000
+        )
+    );
+  }
 
+  state.polling = false;
+
+  if (status) {
+    status.textContent =
+      "A confirmação demorou mais que o esperado. Atualize a página para tentar novamente.";
+  }
+}
+
+
+// =====================================================
+// MOSTRAR KEY
+// =====================================================
+
+function showGeneratedKey(key) {
+
+  const keyElements =
+    document.querySelectorAll(
+      "[data-generated-key]"
+    );
+
+  keyElements.forEach(
+    element => {
+      element.textContent = key;
+    }
+  );
+
+  const status =
+    document.querySelector(
+      "[data-key-status]"
+    );
+
+  if (status) {
+    status.textContent =
+      "Key liberada com sucesso.";
+  }
+
+  document
+    .querySelectorAll(
+      "[data-copy-key]"
+    )
+    .forEach(button => {
+
+      button.disabled = false;
+
+      button.dataset.key =
+        key;
+
+    });
+
+  document
+    .querySelectorAll(
+      "[data-generate-key]"
+    )
+    .forEach(button => {
+
+      button.disabled = false;
+
+      button.textContent =
+        "Gerar nova Key";
+
+    });
+}
+
+
+// =====================================================
+// COPIAR KEY
+// =====================================================
+
+async function copyKey(button) {
+
+  const key =
+    button.dataset.key ||
+    state.key;
+
+  if (!key) {
+    return;
+  }
+
+  try {
+
+    await navigator.clipboard.writeText(
+      key
+    );
+
+    const oldText =
+      button.textContent;
+
+    button.textContent =
+      "Copiado!";
+
+    setTimeout(
+      () => {
+        button.textContent =
+          oldText;
+      },
+      1500
+    );
 
   } catch (error) {
 
     console.error(
-      "Erro verificando LootLabs:",
+      "Erro copiando Key:",
       error
     );
 
-    return false;
   }
-
 }
 
 
-async function startLootLabsPolling(token) {
+function setupCopyKey() {
 
-  if (!token) {
+  document
+    .querySelectorAll(
+      "[data-copy-key]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => copyKey(button)
+      );
+
+    });
+}
+
+
+// =====================================================
+// RETORNO DO LOOTLABS
+// =====================================================
+
+async function handleLootLabsReturn() {
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const lootlabs =
+    params.get(
+      "lootlabs"
+    );
+
+  const token =
+    params.get(
+      "token"
+    );
+
+  if (
+    lootlabs !== "return" ||
+    !token
+  ) {
     return;
   }
 
+  navigate("key");
 
-  if (lootlabsPolling) {
-
-    clearInterval(
-      lootlabsPolling
+  const status =
+    document.querySelector(
+      "[data-key-status]"
     );
 
-    lootlabsPolling = null;
-
+  if (status) {
+    status.textContent =
+      "Verificando sua conclusão...";
   }
 
-
-  let attempts = 0;
-
-  /*
-   * Faz uma verificação imediatamente.
-   */
-
+  // Primeiro tenta imediatamente
   const completed =
     await checkLootLabsStatus(
       token
     );
 
-
   if (completed) {
+    cleanLootLabsUrl();
     return;
   }
 
+  // Depois continua verificando
+  pollLootLabs(token);
 
-  /*
-   * Depois verifica a cada 3 segundos.
-   */
-
-  lootlabsPolling =
-    setInterval(
-      async () => {
-
-        attempts++;
-
-
-        const completed =
-          await checkLootLabsStatus(
-            token
-          );
-
-
-        if (completed) {
-
-          clearInterval(
-            lootlabsPolling
-          );
-
-          lootlabsPolling =
-            null;
-
-          return;
-
-        }
-
-
-        /*
-         * 60 tentativas =
-         * aproximadamente 3 minutos.
-         */
-
-        if (attempts >= 60) {
-
-          clearInterval(
-            lootlabsPolling
-          );
-
-          lootlabsPolling =
-            null;
-
-
-          if (generatedKey) {
-
-            generatedKey.textContent =
-              "Não foi possível confirmar a conclusão. Tente novamente.";
-
-          }
-
-
-          if (generateKeyBtn) {
-
-            generateKeyBtn.disabled =
-              false;
-
-            generateKeyBtn.innerHTML = `
-              <svg viewBox="0 0 24 24">
-                <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
-              </svg>
-              Tentar novamente
-            `;
-
-          }
-
-        }
-
-      },
-      3000
-    );
-
+  cleanLootLabsUrl();
 }
 
 
-/* =========================================
-   CALLBACKS
-========================================= */
+// =====================================================
+// LIMPAR URL
+// =====================================================
 
-const params =
-  new URLSearchParams(
-    window.location.search
-  );
+function cleanLootLabsUrl() {
 
-
-/*
- * Retorno do LootLabs.
- */
-
-if (
-  params.get("lootlabs") ===
-  "return"
-) {
-
-  const token =
-    params.get("token");
-
-
-  /*
-   * Limpa a URL.
-   */
+  const cleanUrl =
+    `${window.location.origin}${window.location.pathname}`;
 
   window.history.replaceState(
     {},
     document.title,
-    window.location.pathname
+    cleanUrl
   );
+}
 
 
-  /*
-   * Abre a página Obter Key.
-   */
+// =====================================================
+// PIX
+// =====================================================
 
-  openPage("key");
+function setupPixCopy() {
+
+  document
+    .querySelectorAll(
+      "[data-copy-pix]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          const pix =
+            "b175d567-5e9a-440c-ad3b-797c6da945c1";
+
+          try {
+
+            await navigator.clipboard.writeText(
+              pix
+            );
+
+            const oldText =
+              button.textContent;
+
+            button.textContent =
+              "Pix copiado!";
+
+            setTimeout(
+              () => {
+                button.textContent =
+                  oldText;
+              },
+              1500
+            );
+
+          } catch (error) {
+
+            console.error(
+              "Erro copiando Pix:",
+              error
+            );
+
+          }
+
+        }
+      );
+
+    });
+}
 
 
-  /*
-   * Mostra estado de verificação.
-   */
+// =====================================================
+// SHINE DOS CARDS
+// =====================================================
 
-  if (generatedKey) {
+function setupCardShine() {
 
-    generatedKey.textContent =
-      "Verificando conclusão...";
+  document
+    .querySelectorAll(
+      ".feature-card, .info-card, .product-card"
+    )
+    .forEach(card => {
 
-  }
+      card.addEventListener(
+        "pointermove",
+        event => {
+
+          const rect =
+            card.getBoundingClientRect();
+
+          const x =
+            event.clientX -
+            rect.left;
+
+          const y =
+            event.clientY -
+            rect.top;
+
+          card.style.setProperty(
+            "--shine-x",
+            `${x}px`
+          );
+
+          card.style.setProperty(
+            "--shine-y",
+            `${y}px`
+          );
+
+        }
+      );
+
+    });
+}
 
 
-  if (copyKeyBtn) {
+// =====================================================
+// LINKS EXTERNOS
+// =====================================================
 
-    copyKeyBtn.disabled =
-      true;
+function setupExternalLinks() {
 
-  }
+  document
+    .querySelectorAll(
+      "[data-buy-script]"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          // Mantenha aqui o seu
+          // link de compra atual.
+          const url =
+            button.dataset.buyScript;
+
+          if (url) {
+            window.open(
+              url,
+              "_blank",
+              "noopener"
+            );
+          }
+
+        }
+      );
+
+    });
+}
 
 
-  if (generateKeyBtn) {
+// =====================================================
+// CALLBACK DISCORD
+// =====================================================
 
-    generateKeyBtn.disabled =
-      true;
+function handleDiscordCallback() {
 
-    generateKeyBtn.innerHTML = `
-      <svg viewBox="0 0 24 24">
-        <path d="M12 3L14 8L19 10L14 12L12 17L10 12L12 17L10 12L5 10L10 8L12 3Z"/>
-      </svg>
-      Verificando...
-    `;
-
-  }
-
-
-  /*
-   * Começa a verificar se o LootLabs
-   * confirmou a conclusão.
-   */
-
-  if (token) {
-
-    startLootLabsPolling(
-      token
+  const params =
+    new URLSearchParams(
+      window.location.search
     );
 
-  } else {
+  if (
+    params.get("discord") ===
+    "connected"
+  ) {
 
-    if (generatedKey) {
+    navigate("discord");
 
-      generatedKey.textContent =
-        "Sessão LootLabs inválida.";
-
-    }
-
-
-    if (generateKeyBtn) {
-
-      generateKeyBtn.disabled =
-        false;
-
-      generateKeyBtn.innerHTML = `
-        <svg viewBox="0 0 24 24">
-          <path d="M12 3L14 8L19 10L14 12L12 17L10 12L12 17L10 12L5 10L10 8L12 3Z"/>
-        </svg>
-        Gerar Key
-      `;
-
-    }
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
 
   }
-
-
-/*
- * Retorno do Discord.
- */
-
-} else if (
-  params.get("discord") ===
-  "connected"
-) {
-
-  window.history.replaceState(
-    {},
-    document.title,
-    window.location.pathname
-  );
-
-
-  openPage("key");
-
-
-  loadDiscord();
-
-
-} else {
-
-  loadDiscord();
-
 }
+
+
+// =====================================================
+// INICIALIZAÇÃO
+// =====================================================
+
+async function init() {
+
+  const available =
+    await checkSiteStatus();
+
+  if (!available) {
+    return;
+  }
+
+  setupSidebar();
+
+  setupNavigation();
+
+  setupDiscordLogin();
+
+  setupDiscordInvite();
+
+  setupLogout();
+
+  setupGenerateKey();
+
+  setupCopyKey();
+
+  setupPixCopy();
+
+  setupCardShine();
+
+  setupExternalLinks();
+
+  handleDiscordCallback();
+
+  await loadDiscordUser();
+
+  await handleLootLabsReturn();
+}
+
+
+init();

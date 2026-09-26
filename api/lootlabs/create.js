@@ -13,6 +13,11 @@ const LOOTLABS_API_KEY =
 const RED_SQUARE_API_KEY =
   process.env.RED_SQUARE_API_KEY;
 
+
+// =====================================
+// COOKIE
+// =====================================
+
 function getCookie(req, name) {
   const cookies = req.headers.cookie || "";
 
@@ -29,9 +34,19 @@ function getCookie(req, name) {
     : null;
 }
 
+
+// =====================================
+// TOKEN
+// =====================================
+
 function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
+
+
+// =====================================
+// DISCORD
+// =====================================
 
 async function getDiscordUser(req) {
   const session =
@@ -45,6 +60,7 @@ async function getDiscordUser(req) {
     `${SITE_URL}/api/discord/me`,
     {
       method: "GET",
+
       headers: {
         Cookie:
           `eclipse_session=${encodeURIComponent(session)}`
@@ -70,7 +86,13 @@ async function getDiscordUser(req) {
   return data.user;
 }
 
+
+// =====================================
+// HANDLER
+// =====================================
+
 module.exports = async function handler(req, res) {
+
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
@@ -79,9 +101,10 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // =========================
-    // CONFIG
-    // =========================
+
+    // =================================
+    // CONFIGURAÇÕES
+    // =================================
 
     if (!SUPABASE_URL || !SUPABASE_KEY) {
       return res.status(500).json({
@@ -93,22 +116,26 @@ module.exports = async function handler(req, res) {
     if (!LOOTLABS_API_KEY) {
       return res.status(500).json({
         success: false,
-        error: "LOOTLABS_API_KEY não configurada."
+        error:
+          "LOOTLABS_API_KEY não configurada."
       });
     }
 
     if (!RED_SQUARE_API_KEY) {
       return res.status(500).json({
         success: false,
-        error: "RED_SQUARE_API_KEY não configurada."
+        error:
+          "RED_SQUARE_API_KEY não configurada."
       });
     }
 
-    // =========================
-    // DISCORD
-    // =========================
 
-    const user = await getDiscordUser(req);
+    // =================================
+    // DISCORD
+    // =================================
+
+    const user =
+      await getDiscordUser(req);
 
     if (!user) {
       return res.status(401).json({
@@ -117,50 +144,72 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    const discordId = user.id;
+    const discordId =
+      user.id;
 
     const discordNick =
       user.global_name ||
       user.username ||
       "Desconhecido";
 
-    // =========================
-    // TOKEN
-    // =========================
 
-    const token = generateToken();
+    // =================================
+    // TOKEN
+    // =================================
+
+    const token =
+      generateToken();
+
+
+    // =================================
+    // RETORNO FINAL
+    // =================================
 
     const returnUrl =
-      `${SITE_URL}/?lootlabs=return&token=${encodeURIComponent(token)}`;
+      `${SITE_URL}/api/lootlabs/complete?token=${encodeURIComponent(token)}`;
 
-    // =========================
+
+    // =================================
     // CRIA SESSÃO
-    // =========================
+    // =================================
 
-    const sessionResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/lootlabs_sessions`,
-      {
-        method: "POST",
+    const sessionResponse =
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/lootlabs_sessions`,
+        {
+          method: "POST",
 
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization:
-            `Bearer ${SUPABASE_KEY}`,
-          "Content-Type":
-            "application/json",
-          Prefer:
-            "return=minimal"
-        },
+          headers: {
+            apikey: SUPABASE_KEY,
 
-        body: JSON.stringify({
-          token,
-          discord_id: discordId,
-          status: "pending"
-        })
-      }
-    );
+            Authorization:
+              `Bearer ${SUPABASE_KEY}`,
+
+            "Content-Type":
+              "application/json",
+
+            Prefer:
+              "return=minimal"
+          },
+
+          body: JSON.stringify({
+            token,
+
+            discord_id:
+              discordId,
+
+            discord_nick:
+              discordNick,
+
+            status:
+              "pending"
+          })
+        }
+      );
+
 
     if (!sessionResponse.ok) {
+
       const errorText =
         await sessionResponse.text();
 
@@ -176,55 +225,77 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // =========================
-    // RED-SQUARE
-    // =========================
-    //
-    // IMPORTANTE:
-    // O RED-SQUARE vai criar
-    // SOMENTE 1 LootLabs.
-    //
-    // Não criamos Content Locker
-    // manualmente aqui.
-    // =========================
+
+    // =================================
+    // RED-SQUARE / B.Y.P.A.S.S
+    // =================================
 
     const redSquarePayload = {
-      url: returnUrl,
+
+      // Destino final
+      url:
+        returnUrl,
 
       // API KEY DO LOOTLABS
-      pikey: LOOTLABS_API_KEY,
+      pikey:
+        LOOTLABS_API_KEY,
 
-      provider: "lootlabs",
+      // Provider
+      provider:
+        "lootlabs",
 
-      Identificator: "eclipse-hub",
+      Identificator:
+        "eclipse-hub",
 
       jsonDetections: {
-        Referer: true,
+
+        Referer:
+          true,
 
         // SOMENTE 1 TAREFA LOOTLABS
-        MaxTasks: "1",
+        MaxTasks:
+          "1",
 
         // Tier 1
-        tier_id: 1,
+        tier_id:
+          1,
 
+        // Proteções
         Presets: {
-          "BYPASS.VIP": true,
-          "BYPASS.CITY": true,
-          "TRW-API": true
+
+          "BYPASS.VIP":
+            true,
+
+          "BYPASS.CITY":
+            true,
+
+          "TRW-API":
+            true
         },
 
+        // =================================
+        // PROTEÇÕES + TIKTOK
+        // =================================
+
         RenueveBooster: {
-          BlockVPNS: true,
 
-          BlockIncognito: true,
+          BlockVPNS:
+            true,
 
-          CaptchaRequired: false,
+          BlockIncognito:
+            true,
 
-          // =========================
-          // ÚNICA MISSÃO EXTRA
-          // =========================
+          // Desativado porque estava
+          // dando problema no Edge
+          CaptchaRequired:
+            false,
+
+          // =================================
+          // MISSÃO TIKTOK
+          // =================================
 
           XTra_tasks: [
+
             {
               Title:
                 "Siga nosso TikTok",
@@ -238,36 +309,44 @@ module.exports = async function handler(req, res) {
               ID:
                 "eclipse_tiktok_follow_v1"
             }
+
           ]
         },
 
-        MinTime: "5",
+        // Tempo mínimo
+        MinTime:
+          "5",
 
-        DetectUserscripts: true,
+        DetectUserscripts:
+          true,
 
-        UnicodeDetect: true,
+        UnicodeDetect:
+          true,
 
-        SpoofCompletion: true,
+        SpoofCompletion:
+          true,
 
-        RS_Invisible: false,
+        RS_Invisible:
+          false,
 
-        ManualDetectionZ: false,
+        ManualDetectionZ:
+          false,
 
         VMConfig: {
-          enabled: true,
-          VMode: "medium"
+
+          enabled:
+            true,
+
+          VMode:
+            "medium"
         }
       }
     };
 
-    // =========================
+
+    // =================================
     // LOG SEGURO
-    // =========================
-    //
-    // NÃO imprimir:
-    // - LootLabs API Key
-    // - RED-SQUARE API Key
-    // =========================
+    // =================================
 
     console.log(
       "RED-SQUARE CONFIG:",
@@ -294,52 +373,73 @@ module.exports = async function handler(req, res) {
             .RenueveBooster
             .XTra_tasks
             .map(task => ({
-              Title: task.Title,
-              ID: task.ID
+              Title:
+                task.Title,
+
+              ID:
+                task.ID
             }))
       }
     );
 
-    // =========================
-    // CRIA LINK PROTEGIDO
-    // =========================
 
-    const redSquareResponse = await fetch(
-      "https://kys.linkvertise.lol/api/v2/bck/publishers",
-      {
-        method: "POST",
+    // =================================
+    // CRIA LINK RED-SQUARE
+    // =================================
 
-        headers: {
-          "c-api-key":
-            RED_SQUARE_API_KEY,
+    const redSquareResponse =
+      await fetch(
+        "https://kys.linkvertise.lol/api/v2/bck/publishers",
+        {
+          method:
+            "POST",
 
-          "Content-Type":
-            "application/json",
+          headers: {
 
-          Accept:
-            "application/json"
-        },
+            "c-api-key":
+              RED_SQUARE_API_KEY,
 
-        body:
-          JSON.stringify(
-            redSquarePayload
-          )
-      }
-    );
+            "Content-Type":
+              "application/json",
+
+            Accept:
+              "application/json"
+          },
+
+          body:
+            JSON.stringify(
+              redSquarePayload
+            )
+        }
+      );
+
 
     const redSquareRaw =
       await redSquareResponse.text();
 
+
     let redSquareData;
 
     try {
+
       redSquareData =
-        JSON.parse(redSquareRaw);
+        JSON.parse(
+          redSquareRaw
+        );
+
     } catch {
+
       redSquareData = {
-        raw: redSquareRaw
+        raw:
+          redSquareRaw
       };
+
     }
+
+
+    // =================================
+    // LOG RED-SQUARE
+    // =================================
 
     console.log(
       "RED-SQUARE STATUS:",
@@ -356,19 +456,22 @@ module.exports = async function handler(req, res) {
           !!redSquareData?.link,
 
         reason:
-          redSquareData?.THReason || null
+          redSquareData?.THReason ||
+          null
       }
     );
 
-    // =========================
+
+    // =================================
     // ERRO
-    // =========================
+    // =================================
 
     if (
       !redSquareResponse.ok ||
       !redSquareData?.success ||
       !redSquareData?.link
     ) {
+
       console.error(
         "RED-SQUARE ERROR:",
         redSquareData
@@ -376,21 +479,27 @@ module.exports = async function handler(req, res) {
 
       return res.status(502).json({
         success: false,
+
         error:
           "RED-SQUARE não conseguiu criar o link.",
+
         red_square_status:
           redSquareResponse.status,
+
         red_square_reason:
-          redSquareData?.THReason || null
+          redSquareData?.THReason ||
+          null
       });
     }
 
-    // =========================
+
+    // =================================
     // LINK FINAL
-    // =========================
+    // =================================
 
     const finalUrl =
       redSquareData.link;
+
 
     console.log(
       "RED-SQUARE LINK CRIADO:"
@@ -400,14 +509,18 @@ module.exports = async function handler(req, res) {
       finalUrl
     );
 
-    // =========================
+
+    // =================================
     // RESPOSTA
-    // =========================
+    // =================================
 
     return res.status(200).json({
-      success: true,
 
-      url: finalUrl,
+      success:
+        true,
+
+      url:
+        finalUrl,
 
       token,
 
@@ -418,7 +531,9 @@ module.exports = async function handler(req, res) {
         discordNick
     });
 
+
   } catch (error) {
+
     console.error(
       "Erro interno:",
       error
@@ -426,6 +541,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(500).json({
       success: false,
+
       error:
         "Erro interno ao criar o link."
     });

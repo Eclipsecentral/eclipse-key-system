@@ -10,7 +10,7 @@ const SITE_URL =
 
 /*
  * ============================================================
- * PEGAR COOKIE
+ * COOKIE
  * ============================================================
  */
 
@@ -32,26 +32,21 @@ function getCookie(req, name) {
 
 /*
  * ============================================================
- * GERAR TOKEN
+ * TOKEN
  * ============================================================
  */
 
 function generateToken() {
-  return crypto
-    .randomBytes(32)
-    .toString("hex");
+  return crypto.randomBytes(32).toString("hex");
 }
 
 /*
  * ============================================================
- * SUPABASE REQUEST
+ * SUPABASE
  * ============================================================
  */
 
-async function supabaseRequest(
-  path,
-  options = {}
-) {
+async function supabaseRequest(path, options = {}) {
   const response = await fetch(
     `${SUPABASE_URL}${path}`,
     {
@@ -96,15 +91,12 @@ async function supabaseRequest(
  * ============================================================
  */
 
-module.exports = async (
-  req,
-  res
-) => {
+module.exports = async (req, res) => {
 
   /*
-   * ============================================================
+   * ==========================================================
    * MÉTODO
-   * ============================================================
+   * ==========================================================
    */
 
   if (req.method !== "POST") {
@@ -117,9 +109,9 @@ module.exports = async (
   try {
 
     /*
-     * ==========================================================
+     * ========================================================
      * CONFIGURAÇÕES
-     * ==========================================================
+     * ========================================================
      */
 
     if (
@@ -142,9 +134,9 @@ module.exports = async (
     }
 
     /*
-     * ==========================================================
-     * 1. PEGAR SESSÃO DO DISCORD
-     * ==========================================================
+     * ========================================================
+     * 1. PEGAR SESSÃO
+     * ========================================================
      */
 
     const session =
@@ -162,13 +154,9 @@ module.exports = async (
     }
 
     /*
-     * ==========================================================
+     * ========================================================
      * 2. VALIDAR DISCORD
-     *
-     * Usa o endpoint que já funciona:
-     *
-     * /api/discord/me
-     * ==========================================================
+     * ========================================================
      */
 
     const discordResponse =
@@ -190,18 +178,12 @@ module.exports = async (
     let discordData;
 
     try {
-
       discordData =
         discordText
-          ? JSON.parse(
-              discordText
-            )
+          ? JSON.parse(discordText)
           : null;
-
     } catch {
-
       discordData = null;
-
     }
 
     console.log(
@@ -216,9 +198,9 @@ module.exports = async (
     );
 
     /*
-     * ==========================================================
-     * VERIFICAR AUTENTICAÇÃO
-     * ==========================================================
+     * ========================================================
+     * VERIFICAR DISCORD
+     * ========================================================
      */
 
     if (
@@ -228,20 +210,12 @@ module.exports = async (
       !discordData.user ||
       !discordData.user.id
     ) {
-
       return res.status(401).json({
         success: false,
         error:
           "Sessão do Discord inválida ou expirada"
       });
-
     }
-
-    /*
-     * ==========================================================
-     * DADOS DO DISCORD
-     * ==========================================================
-     */
 
     const user =
       discordData.user;
@@ -255,18 +229,18 @@ module.exports = async (
       "Desconhecido";
 
     /*
-     * ==========================================================
-     * 3. CRIAR TOKEN DA SESSÃO
-     * ==========================================================
+     * ========================================================
+     * 3. CRIAR TOKEN
+     * ========================================================
      */
 
     const token =
       generateToken();
 
     /*
-     * ==========================================================
+     * ========================================================
      * 4. SALVAR SESSÃO NO SUPABASE
-     * ==========================================================
+     * ========================================================
      */
 
     const {
@@ -301,16 +275,10 @@ module.exports = async (
       }
     );
 
-    /*
-     * ==========================================================
-     * VERIFICAR SUPABASE
-     * ==========================================================
-     */
-
     if (!sessionResponse.ok) {
 
       console.error(
-        "Erro ao criar sessão LootLabs:",
+        "Erro Supabase:",
         sessionData
       );
 
@@ -323,18 +291,18 @@ module.exports = async (
     }
 
     /*
-     * ==========================================================
+     * ========================================================
      * 5. URL DE RETORNO
-     * ==========================================================
+     * ========================================================
      */
 
     const returnUrl =
       `${SITE_URL}/?lootlabs=return&token=${encodeURIComponent(token)}`;
 
     /*
-     * ==========================================================
-     * 6. DADOS PARA O LOOTLABS
-     * ==========================================================
+     * ========================================================
+     * 6. PAYLOAD LOOTLABS
+     * ========================================================
      */
 
     const payload = {
@@ -357,14 +325,14 @@ module.exports = async (
     };
 
     console.log(
-      "Enviando para LootLabs:",
+      "LootLabs payload:",
       payload
     );
 
     /*
-     * ==========================================================
-     * 7. CRIAR CONTENT LOCKER
-     * ==========================================================
+     * ========================================================
+     * 7. CRIAR LINK
+     * ========================================================
      */
 
     const lootlabsResponse =
@@ -392,9 +360,9 @@ module.exports = async (
       );
 
     /*
-     * ==========================================================
-     * LER RESPOSTA
-     * ==========================================================
+     * ========================================================
+     * 8. LER RESPOSTA DO LOOTLABS
+     * ========================================================
      */
 
     const rawText =
@@ -419,19 +387,34 @@ module.exports = async (
     }
 
     console.log(
-      "LootLabs status:",
+      "================================="
+    );
+
+    console.log(
+      "LOOTLABS STATUS:",
       lootlabsResponse.status
     );
 
     console.log(
-      "LootLabs resposta:",
-      lootlabsData
+      "LOOTLABS RESPOSTA COMPLETA:"
+    );
+
+    console.log(
+      JSON.stringify(
+        lootlabsData,
+        null,
+        2
+      )
+    );
+
+    console.log(
+      "================================="
     );
 
     /*
-     * ==========================================================
-     * 8. LOOTLABS RECUSOU
-     * ==========================================================
+     * ========================================================
+     * 9. LOOTLABS RECUSOU
+     * ========================================================
      */
 
     if (!lootlabsResponse.ok) {
@@ -455,33 +438,41 @@ module.exports = async (
           null,
 
         lootlabs_response:
-          lootlabsData
+          lootlabsData ||
+          null
 
       });
 
     }
 
     /*
-     * ==========================================================
-     * 9. PEGAR LOOT_URL
-     * ==========================================================
+     * ========================================================
+     * 10. PEGAR LOOT_URL
+     * ========================================================
      */
 
-    console.log(
-      "LootLabs resposta bruta:",
-      lootlabsData
-    );
-
-    let lootUrl =
-      lootlabsData?.message?.loot_url ||
-      null;
+    let lootUrl = null;
 
     /*
-     * ==========================================================
-     * FALLBACKS
+     * FORMATO OFICIAL:
      *
-     * Caso a API retorne a URL em outro campo.
-     * ==========================================================
+     * message.loot_url
+     */
+
+    if (
+      lootlabsData &&
+      lootlabsData.message &&
+      typeof lootlabsData.message === "object"
+    ) {
+
+      lootUrl =
+        lootlabsData.message.loot_url ||
+        null;
+
+    }
+
+    /*
+     * FALLBACKS
      */
 
     if (!lootUrl) {
@@ -495,9 +486,9 @@ module.exports = async (
     }
 
     /*
-     * ==========================================================
-     * 10. VERIFICAR URL
-     * ==========================================================
+     * ========================================================
+     * 11. SE NÃO EXISTIR URL
+     * ========================================================
      */
 
     if (!lootUrl) {
@@ -511,22 +502,27 @@ module.exports = async (
       );
 
       console.error(
-        "STATUS:",
-        lootlabsResponse.status
-      );
-
-      console.error(
-        "TIPO:",
+        "TYPE:",
         lootlabsData?.type
       );
 
       console.error(
-        "MENSAGEM:",
+        "MESSAGE:",
         lootlabsData?.message
       );
 
       console.error(
-        "RESPOSTA COMPLETA:",
+        "URL:",
+        lootlabsData?.url
+      );
+
+      console.error(
+        "LOOT_URL:",
+        lootlabsData?.loot_url
+      );
+
+      console.error(
+        "RESPOSTA:",
         lootlabsData
       );
 
@@ -552,7 +548,8 @@ module.exports = async (
           lootlabsData?.message ||
           null,
 
-        loot_url:
+        lootlabs_response:
+          lootlabsData ||
           null
 
       });
@@ -560,9 +557,9 @@ module.exports = async (
     }
 
     /*
-     * ==========================================================
-     * 11. ADICIONAR PUID
-     * ==========================================================
+     * ========================================================
+     * 12. ADICIONAR PUID
+     * ========================================================
      */
 
     let finalLootUrl;
@@ -583,7 +580,7 @@ module.exports = async (
     } catch (error) {
 
       console.error(
-        "URL LootLabs inválida:",
+        "Erro ao processar URL:",
         lootUrl
       );
 
@@ -599,9 +596,9 @@ module.exports = async (
     }
 
     /*
-     * ==========================================================
-     * 12. SUCESSO
-     * ==========================================================
+     * ========================================================
+     * 13. SUCESSO
+     * ========================================================
      */
 
     console.log(
@@ -613,22 +610,22 @@ module.exports = async (
     );
 
     console.log(
-      "Discord:",
+      "DISCORD:",
       discordId
     );
 
     console.log(
-      "Nick:",
+      "NICK:",
       discordNick
     );
 
     console.log(
-      "Token:",
+      "TOKEN:",
       token
     );
 
     console.log(
-      "Loot URL:",
+      "URL:",
       finalLootUrl
     );
 
@@ -661,14 +658,25 @@ module.exports = async (
   } catch (error) {
 
     /*
-     * ==========================================================
+     * ========================================================
      * ERRO GERAL
-     * ==========================================================
+     * ========================================================
      */
 
     console.error(
-      "Erro em /api/lootlabs/create:",
+      "================================="
+    );
+
+    console.error(
+      "ERRO GERAL LOOTLABS:"
+    );
+
+    console.error(
       error
+    );
+
+    console.error(
+      "================================="
     );
 
     return res.status(500).json({

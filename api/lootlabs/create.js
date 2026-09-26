@@ -21,44 +21,6 @@ function getCookie(req, name) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function verifySession(session) {
-  try {
-    if (!session || !process.env.SESSION_SECRET) {
-      return null;
-    }
-
-    const parts = session.split(".");
-
-    if (parts.length !== 2) {
-      return null;
-    }
-
-    const [payload, signature] = parts;
-
-    const expected = crypto
-      .createHmac("sha256", process.env.SESSION_SECRET)
-      .update(payload)
-      .digest("base64url");
-
-    if (signature !== expected) {
-      return null;
-    }
-
-    const data = JSON.parse(
-      Buffer.from(payload, "base64url").toString("utf8")
-    );
-
-    if (!data || !data.user) {
-      return null;
-    }
-
-    return data.user;
-  } catch (error) {
-    console.error("Erro ao verificar sessão:", error);
-    return null;
-  }
-}
-
 function generateToken() {
   return crypto.randomBytes(32).toString("hex");
 }
@@ -115,7 +77,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 1. PEGAR SESSÃO DO DISCORD
+     * 1. PEGAR A SESSÃO DO NAVEGADOR
      * ============================================================
      */
 
@@ -128,14 +90,56 @@ module.exports = async (req, res) => {
       });
     }
 
-    const user = verifySession(session);
+    /*
+     * ============================================================
+     * 2. VALIDAR A SESSÃO PELO NOSSO /api/discord/me
+     *
+     * Não tentamos interpretar o cookie manualmente.
+     * O endpoint que já funciona no seu sistema faz isso.
+     * ============================================================
+     */
 
-    if (!user || !user.id) {
+    const discordResponse = await fetch(
+      `${SITE_URL}/api/discord/me`,
+      {
+        method: "GET",
+        headers: {
+          Cookie: `eclipse_session=${encodeURIComponent(session)}`
+        }
+      }
+    );
+
+    const discordText = await discordResponse.text();
+
+    let discordData;
+
+    try {
+      discordData = discordText
+        ? JSON.parse(discordText)
+        : null;
+    } catch {
+      discordData = null;
+    }
+
+    console.log("Discord /me:", {
+      status: discordResponse.status,
+      authenticated: discordData?.authenticated
+    });
+
+    if (
+      !discordResponse.ok ||
+      !discordData ||
+      discordData.authenticated !== true ||
+      !discordData.user ||
+      !discordData.user.id
+    ) {
       return res.status(401).json({
         success: false,
-        error: "Sessão inválida"
+        error: "Sessão do Discord inválida ou expirada"
       });
     }
+
+    const user = discordData.user;
 
     const discordId = String(user.id);
 
@@ -146,7 +150,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 2. CRIAR TOKEN ÚNICO DA SESSÃO LOOTLABS
+     * 3. CRIAR TOKEN DA SESSÃO LOOTLABS
      * ============================================================
      */
 
@@ -154,25 +158,35 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 3. SALVAR SESSÃO NO SUPABASE
+     * 4. SALVAR SESSÃO NO SUPABASE
      * ============================================================
      */
 
-    const { response: sessionResponse, data: sessionData } =
-      await supabaseRequest("/rest/v1/lootlabs_sessions", {
+    const {
+      response: sessionResponse,
+      data: sessionData
+    } = await supabaseRequest(
+      "/rest/v1/lootlabs_sessions",
+      {
         method: "POST",
+
         headers: {
           Prefer: "return=representation"
         },
+
         body: JSON.stringify({
           token,
           discord_id: discordId,
           status: "pending"
         })
-      });
+      }
+    );
 
     if (!sessionResponse.ok) {
-      console.error("Erro ao criar lootlabs_sessions:", sessionData);
+      console.error(
+        "Erro ao criar sessão LootLabs:",
+        sessionData
+      );
 
       return res.status(500).json({
         success: false,
@@ -182,7 +196,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 4. URL PARA ONDE O LOOTLABS VAI MANDAR O USUÁRIO
+     * 5. URL DE RETORNO
      * ============================================================
      */
 
@@ -191,17 +205,11 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 5. CRIAR LINK NO LOOTLABS
-     *
-     * API OFICIAL:
-     * POST /api/public/content_locker
-     *
-     * Authorization:
-     * Bearer LOOTLABS_API_KEY
+     * 6. CRIAR LINK NO LOOTLABS
      * ============================================================
      */
 
-    const lootlabsPayload = {
+    const payload = {
       title: "Eclipse Hub - Obter Key",
       url: returnUrl,
       tier_id: 1,
@@ -209,23 +217,20 @@ module.exports = async (req, res) => {
       theme: 1
     };
 
-    console.log("Criando link LootLabs:", {
-      discordId,
-      token,
-      returnUrl,
-      payload: lootlabsPayload
-    });
+    console.log("Enviando para LootLabs:", payload);
 
     const lootlabsResponse = await fetch(
       "https://creators.lootlabs.gg/api/public/content_locker",
       {
         method: "POST",
+
         headers: {
           Authorization: `Bearer ${LOOTLABS_API_KEY}`,
           "Content-Type": "application/json",
           Accept: "application/json"
         },
-        body: JSON.stringify(lootlabsPayload)
+
+        body: JSON.stringify(payload)
       }
     );
 
@@ -234,19 +239,28 @@ module.exports = async (req, res) => {
     let lootlabsData;
 
     try {
-      lootlabsData = rawText ? JSON.parse(rawText) : null;
+      lootlabsData = rawText
+        ? JSON.parse(rawText)
+        : null;
     } catch {
       lootlabsData = {
         raw: rawText
       };
     }
 
-    console.log("LootLabs HTTP:", lootlabsResponse.status);
-    console.log("LootLabs resposta:", lootlabsData);
+    console.log(
+      "LootLabs status:",
+      lootlabsResponse.status
+    );
+
+    console.log(
+      "LootLabs resposta:",
+      lootlabsData
+    );
 
     /*
      * ============================================================
-     * 6. VERIFICAR ERRO DO LOOTLABS
+     * 7. ERRO DO LOOTLABS
      * ============================================================
      */
 
@@ -261,7 +275,7 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 7. PEGAR URL GERADA PELO LOOTLABS
+     * 8. PEGAR LINK GERADO
      * ============================================================
      */
 
@@ -274,7 +288,7 @@ module.exports = async (req, res) => {
 
     if (!lootUrl) {
       console.error(
-        "LootLabs não retornou uma URL:",
+        "LootLabs não retornou URL:",
         lootlabsData
       );
 
@@ -287,46 +301,43 @@ module.exports = async (req, res) => {
 
     /*
      * ============================================================
-     * 8. ADICIONAR PUID
-     *
-     * O LootLabs envia esse valor posteriormente
-     * como click_id no Postback.
+     * 9. ADICIONAR PUID
      * ============================================================
      */
 
-    try {
-      const url = new URL(lootUrl);
+    const lootLink = new URL(lootUrl);
 
-      url.searchParams.set("puid", token);
+    lootLink.searchParams.set(
+      "puid",
+      token
+    );
 
-      lootUrl = url.toString();
-    } catch (error) {
-      console.error("Erro ao adicionar puid:", error);
-
-      return res.status(500).json({
-        success: false,
-        error: "Link LootLabs inválido"
-      });
-    }
+    lootUrl = lootLink.toString();
 
     /*
      * ============================================================
-     * 9. RETORNAR LINK PARA O FRONT-END
+     * 10. RETORNAR AO SITE
      * ============================================================
      */
 
     return res.status(200).json({
       success: true,
+
       url: lootUrl,
+
       token,
-      discord: {
+
+      user: {
         id: discordId,
         nick: discordNick
       }
     });
 
   } catch (error) {
-    console.error("Erro geral em /api/lootlabs/create:", error);
+    console.error(
+      "Erro em /api/lootlabs/create:",
+      error
+    );
 
     return res.status(500).json({
       success: false,

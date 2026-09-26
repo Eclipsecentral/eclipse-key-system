@@ -2,11 +2,7 @@
 
 :root {
   --bg: #07070b;
-  --bg-soft: #0b0a11;
-
-  --panel: rgba(17, 16, 24, .82);
-  --panel-2: rgba(20, 19, 29, .72);
-
+  --panel: rgba(17,16,24,.82);
   --border: rgba(255,255,255,.075);
 
   --purple: #8b5cf6;
@@ -164,9 +160,6 @@ svg {
 
   border-bottom: 1px solid var(--border);
 }
-
-
-/* MENU BUTTON */
 
 .menu-btn {
   display: none;
@@ -362,8 +355,6 @@ svg {
   place-items: center;
 
   color: #777685;
-
-  transition: color .2s ease;
 }
 
 .nav-item.active .nav-icon {
@@ -476,7 +467,7 @@ svg {
 }
 
 .hero h1 {
-  font-size: clamp(40px, 5.5vw, 66px);
+  font-size: clamp(40px,5.5vw,66px);
 
   line-height: 1.04;
 
@@ -558,7 +549,7 @@ svg {
 
   background:
     conic-gradient(
-      from var(--shine-angle, 0deg),
+      from var(--shine-angle,0deg),
       transparent 0deg,
       transparent 260deg,
       rgba(167,139,250,.95) 285deg,
@@ -575,6 +566,7 @@ svg {
   mask-composite: exclude;
 
   opacity: 0;
+
   transform: scale(.97);
 
   pointer-events: none;
@@ -588,9 +580,7 @@ svg {
 
   0% {
     --shine-angle: 0deg;
-
     opacity: 0;
-
     transform: scale(.97);
   }
 
@@ -600,9 +590,7 @@ svg {
 
   100% {
     --shine-angle: 360deg;
-
     opacity: 0;
-
     transform: scale(1);
   }
 
@@ -617,7 +605,7 @@ svg {
   display: grid;
 
   grid-template-columns:
-    repeat(3, minmax(0, 1fr));
+    repeat(3,minmax(0,1fr));
 
   gap: 11px;
 }
@@ -776,10 +764,6 @@ svg {
 
 .development-icon svg {
   width: 21px;
-}
-
-.development-card > div:last-child {
-  min-width: 0;
 }
 
 .development-card span {
@@ -968,7 +952,7 @@ svg {
 }
 
 .page-center h1 {
-  font-size: clamp(31px, 4.5vw, 47px);
+  font-size: clamp(31px,4.5vw,47px);
 
   letter-spacing: -2px;
 }
@@ -1019,7 +1003,7 @@ svg {
 ========================= */
 
 .key-page {
-  width: min(650px, 100%);
+  width: min(650px,100%);
 
   display: flex;
 
@@ -1035,11 +1019,6 @@ svg {
 
   text-align: center;
 }
-
-
-/* =========================
-   ACCOUNT CARD
-========================= */
 
 .account-card {
   width: 100%;
@@ -1184,11 +1163,6 @@ svg {
 
   border-color: rgba(255,80,80,.24);
 }
-
-
-/* =========================
-   KEY BOX
-========================= */
 
 .key-box {
   width: 100%;
@@ -1364,63 +1338,456 @@ svg {
    SHOP
 ========================= */
 
-.coming-card {
-  width: min(560px, 100%);
+.shop-page {
+  width: min(720px,100%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin: 0 auto;
+
+  text-align: center;
+}
+
+.shop-page h1 {
+  font-size: clamp(32px,5vw,48px);
+
+  line-height: 1.05;
+
+  letter-spacing: -2px;
+}
+
+.shop-page h1 span {
+  color: var(--purple-light);
+
+  text-shadow:
+    0 0 28px rgba(139,92,246,.25);
+}
+
+.shop-description {
+  margin-top: 12px;
+
+  color: var(--muted);
+
+  font-size: 12px;
+}
+
+
+/* PAGAMENTO */
+
+.payment-card {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns: 170px 1fr;
+
+  margin-top: 30px;
+
+  padding: 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(139,92,246,.075),
+      rgba(255,255,255,.018)
+    );
+
+  border: 1px solid rgba(139,92,246,.15);
+
+  border-radius: 17px;
+
+  text-align: left;
+}
+
+.pix-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding-right: 22px;
+
+  border-right: 1px solid var(--border);
+
+  text-align: center;
+}
+
+.pix-icon {
+  width: 58px;
+  height: 58px;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--green);
+
+  background: rgba(117,255,154,.055);
+
+  border: 1px solid rgba(117,255,154,.14);
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 0 30px rgba(117,255,154,.05);
+}
+
+.pix-icon svg {
+  width: 29px;
+  height: 29px;
+}
+
+.pix-side > span {
+  margin-top: 12px;
+
+  color: #858491;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  letter-spacing: 1.3px;
+}
+
+.pix-side > strong {
+  margin-top: 2px;
+
+  color: var(--green);
+
+  font-size: 17px;
+}
+
+.payment-info {
+  padding-left: 24px;
+}
+
+.payment-label {
+  display: block;
+
+  color: #74727f;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 2px;
+}
+
+.price {
+  display: block;
+
+  margin-top: 2px;
+
+  color: var(--purple-light);
+
+  font-size: 42px;
+
+  line-height: 1;
+
+  letter-spacing: -2px;
+
+  text-shadow:
+    0 0 28px rgba(139,92,246,.2);
+}
+
+.payment-info > p {
+  margin-top: 9px;
+
+  color: var(--muted);
+
+  font-size: 10px;
+}
+
+.pix-key {
+  width: 100%;
 
   display: flex;
   align-items: center;
 
-  gap: 14px;
+  gap: 8px;
 
-  margin-top: 28px;
+  margin-top: 13px;
 
-  padding: 19px;
+  padding: 9px 9px 9px 12px;
 
-  text-align: left;
+  background: rgba(0,0,0,.2);
 
-  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
 
-  border: 1px solid var(--border);
-
-  border-radius: 14px;
+  border-radius: 10px;
 }
 
-.coming-icon {
-  width: 43px;
-  height: 43px;
+.pix-key span {
+  flex: 1;
+
+  overflow: hidden;
+
+  color: #c0bfca;
+
+  font-family: monospace;
+
+  font-size: 9px;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.pix-key button {
+  width: 34px;
+  height: 34px;
 
   display: grid;
   place-items: center;
 
   flex-shrink: 0;
 
+  color: #aaa8b7;
+
+  background: rgba(255,255,255,.055);
+
+  border: 1px solid var(--border);
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+.pix-key button:hover {
+  color: #fff;
+
+  border-color:
+    rgba(139,92,246,.35);
+}
+
+.pix-key button svg {
+  width: 16px;
+}
+
+.copy-pix-btn {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 42px;
+
+  margin-top: 8px;
+
+  color: #fff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8b5cf6,
+      #7042d7
+    );
+
+  border-radius: 10px;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 25px rgba(139,92,246,.14);
+
+  transition: .2s ease;
+}
+
+.copy-pix-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 13px 30px rgba(139,92,246,.23);
+}
+
+.copy-pix-btn.success {
+  color: #07130b;
+
+  background: var(--green);
+
+  box-shadow:
+    0 10px 25px rgba(117,255,154,.12);
+}
+
+.copy-pix-btn svg {
+  width: 16px;
+}
+
+
+/* ETAPAS */
+
+.payment-steps {
+  width: 100%;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(3,minmax(0,1fr));
+
+  gap: 9px;
+
+  margin-top: 10px;
+}
+
+.payment-step {
+  min-height: 145px;
+
+  padding: 15px;
+
+  background:
+    rgba(255,255,255,.025);
+
+  border: 1px solid var(--border);
+
+  border-radius: 13px;
+
+  text-align: left;
+}
+
+.step-icon {
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 12px;
+
   color: var(--purple-light);
 
   background: rgba(139,92,246,.08);
 
-  border-radius: 11px;
+  border: 1px solid rgba(139,92,246,.11);
+
+  border-radius: 9px;
 }
 
-.coming-icon svg {
-  width: 20px;
+.step-icon svg {
+  width: 17px;
 }
 
-.coming-card strong {
+.payment-step strong {
   display: block;
 
-  font-size: 12px;
+  font-size: 10px;
 }
 
-.coming-card span {
-  display: block;
-
-  margin-top: 4px;
+.payment-step p {
+  margin-top: 6px;
 
   color: var(--muted);
 
   font-size: 9px;
 
-  line-height: 1.6;
+  line-height: 1.65;
+}
+
+
+/* DISCORD */
+
+.discord-purchase-btn {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 9px;
+
+  min-height: 46px;
+
+  margin-top: 10px;
+
+  color: #fff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #5865f2,
+      #4752c4
+    );
+
+  border-radius: 11px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  box-shadow:
+    0 10px 30px rgba(88,101,242,.14);
+
+  transition: .2s ease;
+}
+
+.discord-purchase-btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 14px 35px rgba(88,101,242,.23);
+}
+
+.discord-purchase-btn svg {
+  width: 18px;
+}
+
+
+/* AVISO */
+
+.purchase-warning {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin-top: 10px;
+
+  padding: 14px;
+
+  color: #777581;
+
+  background:
+    rgba(255,70,70,.025);
+
+  border: 1px solid rgba(255,80,80,.1);
+
+  border-radius: 11px;
+
+  text-align: left;
+}
+
+.purchase-warning > svg {
+  width: 20px;
+  height: 20px;
+
+  flex-shrink: 0;
+
+  color: #ff7777;
+}
+
+.purchase-warning strong {
+  display: block;
+
+  color: #b5b3be;
+
+  font-size: 9px;
+}
+
+.purchase-warning span {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 8px;
+
+  line-height: 1.5;
 }
 
 
@@ -1435,7 +1802,8 @@ svg {
   }
 
   .features-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
   }
 
   .feature-card.wide {
@@ -1461,7 +1829,11 @@ svg {
 
     height: 65px;
 
-    justify-content: space-between;
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-start;
 
     padding: 0 16px;
   }
@@ -1469,6 +1841,15 @@ svg {
 
   .menu-btn {
     display: grid;
+  }
+
+
+  /*
+   * Aproximadamente dois espaços
+   * entre as três barras e o Eclipse Hub.
+   */
+  .topbar .brand {
+    margin-left: 28px;
   }
 
 
@@ -1487,7 +1868,7 @@ svg {
 
 
   .sidebar {
-    width: min(300px, 82vw);
+    width: min(300px,82vw);
 
     transform: translateX(-105%);
 
@@ -1513,6 +1894,7 @@ svg {
     width: calc(100% - 32px);
 
     padding-top: 40px;
+
     padding-bottom: 65px;
   }
 
@@ -1649,6 +2031,71 @@ svg {
     font-size: 15px;
   }
 
+
+  /* SHOP */
+
+  .shop-page {
+    width: 100%;
+  }
+
+
+  .shop-page h1 {
+    font-size: 34px;
+  }
+
+
+  .payment-card {
+    grid-template-columns: 1fr;
+
+    padding: 17px;
+  }
+
+
+  .pix-side {
+    padding: 0 0 17px;
+
+    border-right: 0;
+
+    border-bottom: 1px solid var(--border);
+  }
+
+
+  .payment-info {
+    padding: 17px 0 0;
+  }
+
+
+  .price {
+    font-size: 38px;
+  }
+
+
+  .payment-steps {
+    grid-template-columns: 1fr;
+  }
+
+
+  .payment-step {
+    min-height: auto;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+  }
+
+
+  .step-icon {
+    flex-shrink: 0;
+
+    margin-bottom: 0;
+  }
+
+
+  .purchase-warning {
+    align-items: flex-start;
+  }
+
 }
 
 
@@ -1661,7 +2108,7 @@ svg {
   .brand {
     transform: scale(.93);
 
-    transform-origin: right center;
+    transform-origin: left center;
   }
 
 
@@ -1690,4 +2137,14 @@ svg {
     width: 100%;
   }
 
-    }
+
+  .shop-page h1 {
+    font-size: 31px;
+  }
+
+
+  .price {
+    font-size: 35px;
+  }
+
+}

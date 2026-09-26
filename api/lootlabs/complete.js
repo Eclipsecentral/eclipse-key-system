@@ -1,5 +1,3 @@
-const crypto = require("crypto");
-
 const SUPABASE_URL =
   process.env.SUPABASE_URL;
 
@@ -12,7 +10,7 @@ const SITE_URL =
 
 
 // =====================================
-// GERA BLOCO
+// GERA BLOCO DA KEY
 // =====================================
 
 function randomBlock() {
@@ -57,7 +55,7 @@ function generateKey() {
 
 
 // =====================================
-// VERIFICA SE KEY EXISTE
+// GERA KEY ÚNICA
 // =====================================
 
 async function generateUniqueKey() {
@@ -75,11 +73,9 @@ async function generateUniqueKey() {
       await fetch(
         `${SUPABASE_URL}/rest/v1/keys_sistema?chave=eq.${encodeURIComponent(key)}&select=id`,
         {
-          method:
-            "GET",
+          method: "GET",
 
           headers: {
-
             apikey:
               SUPABASE_KEY,
 
@@ -88,7 +84,6 @@ async function generateUniqueKey() {
           }
         }
       );
-
 
     if (!response.ok) {
 
@@ -101,10 +96,8 @@ async function generateUniqueKey() {
 
     }
 
-
     const existing =
       await response.json();
-
 
     if (
       Array.isArray(existing) &&
@@ -116,7 +109,6 @@ async function generateUniqueKey() {
     }
 
   }
-
 
   throw new Error(
     "Não foi possível gerar uma Key única."
@@ -142,7 +134,6 @@ module.exports = async function handler(
 
     const token =
       req.query.token;
-
 
     if (!token) {
 
@@ -172,18 +163,16 @@ module.exports = async function handler(
 
 
     // =================================
-    // BUSCA SESSÃO
+    // BUSCAR SESSÃO
     // =================================
 
     const sessionResponse =
       await fetch(
         `${SUPABASE_URL}/rest/v1/lootlabs_sessions?token=eq.${encodeURIComponent(token)}&select=*`,
         {
-          method:
-            "GET",
+          method: "GET",
 
           headers: {
-
             apikey:
               SUPABASE_KEY,
 
@@ -237,12 +226,11 @@ module.exports = async function handler(
 
 
     // =================================
-    // SE JÁ ESTÁ COMPLETA
+    // SE JÁ ESTIVER COMPLETA
     // =================================
 
     if (
-      session.status ===
-      "completed" &&
+      session.status === "completed" &&
       session.key_value
     ) {
 
@@ -291,10 +279,10 @@ module.exports = async function handler(
 
 
     // =================================
-    // USER_ID
+    // USER ID
     // =================================
     //
-    // FORMATO:
+    // Formato:
     //
     // DiscordID | Nick
     //
@@ -312,8 +300,7 @@ module.exports = async function handler(
       await fetch(
         `${SUPABASE_URL}/rest/v1/keys_sistema`,
         {
-          method:
-            "POST",
+          method: "POST",
 
           headers: {
 
@@ -375,15 +362,66 @@ module.exports = async function handler(
 
 
     // =================================
-    // MARCA SESSÃO
+    // REGISTRA LOG ADMIN
+    // =================================
+
+    const logResponse =
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/key_logs`,
+        {
+          method: "POST",
+
+          headers: {
+
+            apikey:
+              SUPABASE_KEY,
+
+            Authorization:
+              `Bearer ${SUPABASE_KEY}`,
+
+            "Content-Type":
+              "application/json",
+
+            Prefer:
+              "return=minimal"
+          },
+
+          body:
+            JSON.stringify({
+
+              chave:
+                key,
+
+              discord_id:
+                discordId,
+
+              discord_nick:
+                discordNick
+
+            })
+        }
+      );
+
+
+    if (!logResponse.ok) {
+
+      console.error(
+        "Erro registrando log:",
+        await logResponse.text()
+      );
+
+    }
+
+
+    // =================================
+    // ATUALIZA SESSÃO
     // =================================
 
     const updateResponse =
       await fetch(
         `${SUPABASE_URL}/rest/v1/lootlabs_sessions?token=eq.${encodeURIComponent(token)}`,
         {
-          method:
-            "PATCH",
+          method: "PATCH",
 
           headers: {
 
@@ -458,7 +496,10 @@ module.exports = async function handler(
         discordNick,
 
       key_created:
-        true
+        true,
+
+      key_logged:
+        logResponse.ok
 
     });
 

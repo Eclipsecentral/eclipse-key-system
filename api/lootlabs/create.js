@@ -30,9 +30,7 @@ function getCookie(req, name) {
 }
 
 function generateToken() {
-  return crypto
-    .randomBytes(32)
-    .toString("hex");
+  return crypto.randomBytes(32).toString("hex");
 }
 
 async function getDiscordUser(req) {
@@ -82,13 +80,10 @@ module.exports = async function handler(req, res) {
 
   try {
     // =========================
-    // CONFIGURAÇÕES
+    // CONFIG
     // =========================
 
-    if (
-      !SUPABASE_URL ||
-      !SUPABASE_KEY
-    ) {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
       return res.status(500).json({
         success: false,
         error: "Supabase não configurado."
@@ -113,8 +108,7 @@ module.exports = async function handler(req, res) {
     // DISCORD
     // =========================
 
-    const user =
-      await getDiscordUser(req);
+    const user = await getDiscordUser(req);
 
     if (!user) {
       return res.status(401).json({
@@ -131,11 +125,10 @@ module.exports = async function handler(req, res) {
       "Desconhecido";
 
     // =========================
-    // TOKEN DA SESSÃO
+    // TOKEN
     // =========================
 
-    const token =
-      generateToken();
+    const token = generateToken();
 
     const returnUrl =
       `${SITE_URL}/?lootlabs=return&token=${encodeURIComponent(token)}`;
@@ -144,35 +137,36 @@ module.exports = async function handler(req, res) {
     // CRIA SESSÃO
     // =========================
 
-    const sessionResponse =
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/lootlabs_sessions`,
-        {
-          method: "POST",
-          headers: {
-            apikey: SUPABASE_KEY,
-            Authorization:
-              `Bearer ${SUPABASE_KEY}`,
-            "Content-Type":
-              "application/json",
-            Prefer:
-              "return=minimal"
-          },
-          body: JSON.stringify({
-            token,
-            discord_id: discordId,
-            status: "pending"
-          })
-        }
-      );
+    const sessionResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/lootlabs_sessions`,
+      {
+        method: "POST",
+
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization:
+            `Bearer ${SUPABASE_KEY}`,
+          "Content-Type":
+            "application/json",
+          Prefer:
+            "return=minimal"
+        },
+
+        body: JSON.stringify({
+          token,
+          discord_id: discordId,
+          status: "pending"
+        })
+      }
+    );
 
     if (!sessionResponse.ok) {
-      const sessionError =
+      const errorText =
         await sessionResponse.text();
 
       console.error(
-        "Erro ao criar sessão:",
-        sessionError
+        "Erro Supabase:",
+        errorText
       );
 
       return res.status(500).json({
@@ -183,189 +177,35 @@ module.exports = async function handler(req, res) {
     }
 
     // =========================
-    // LOOTLABS
+    // RED-SQUARE
     // =========================
-
-    const lootlabsPayload = {
-      title:
-        "Eclipse Hub | Obter Key",
-
-      url:
-        returnUrl,
-
-      tier_id: 1,
-
-      number_of_tasks: 3,
-
-      theme: 1
-    };
-
-    console.log(
-      "LootLabs payload:",
-      lootlabsPayload
-    );
-
-    const lootlabsResponse =
-      await fetch(
-        "https://creators.lootlabs.gg/api/public/content_locker",
-        {
-          method: "POST",
-
-          headers: {
-            Authorization:
-              `Bearer ${LOOTLABS_API_KEY}`,
-
-            "Content-Type":
-              "application/json",
-
-            Accept:
-              "application/json"
-          },
-
-          body:
-            JSON.stringify(
-              lootlabsPayload
-            )
-        }
-      );
-
-    const lootlabsRaw =
-      await lootlabsResponse.text();
-
-    let lootlabsData;
-
-    try {
-      lootlabsData =
-        JSON.parse(lootlabsRaw);
-    } catch {
-      lootlabsData = {
-        raw: lootlabsRaw
-      };
-    }
-
-    console.log(
-      "================================="
-    );
-
-    console.log(
-      "LOOTLABS STATUS:",
-      lootlabsResponse.status
-    );
-
-    console.log(
-      "LOOTLABS RESPOSTA:"
-    );
-
-    console.log(
-      JSON.stringify(
-        lootlabsData,
-        null,
-        2
-      )
-    );
-
-    console.log(
-      "================================="
-    );
-
-    // =========================
-    // PEGA LOOT URL
-    // =========================
-
-    let lootUrl = null;
-
-    if (
-      lootlabsData &&
-      Array.isArray(
-        lootlabsData.message
-      ) &&
-      lootlabsData.message.length
-    ) {
-      lootUrl =
-        lootlabsData
-          .message[0]
-          ?.loot_url;
-    }
-
-    if (
-      !lootUrl &&
-      lootlabsData?.message &&
-      !Array.isArray(
-        lootlabsData.message
-      )
-    ) {
-      lootUrl =
-        lootlabsData
-          .message
-          ?.loot_url;
-    }
-
-    if (!lootUrl) {
-      lootUrl =
-        lootlabsData?.loot_url ||
-        lootlabsData?.url ||
-        null;
-    }
-
-    if (
-      !lootlabsResponse.ok ||
-      !lootUrl
-    ) {
-      console.error(
-        "LootLabs não retornou URL:",
-        lootlabsData
-      );
-
-      return res.status(502).json({
-        success: false,
-        error:
-          "LootLabs não retornou o link."
-      });
-    }
-
-    // =========================
-    // PUID
-    // =========================
-
-    const separator =
-      lootUrl.includes("?")
-        ? "&"
-        : "?";
-
-    lootUrl =
-      `${lootUrl}${separator}puid=${encodeURIComponent(token)}`;
-
-    console.log(
-      "LootLabs URL com PUID:",
-      lootUrl
-    );
-
-    // =========================
-    // RED-SQUARE / B.Y.P.A.S.S
+    //
+    // IMPORTANTE:
+    // O RED-SQUARE vai criar
+    // SOMENTE 1 LootLabs.
+    //
+    // Não criamos Content Locker
+    // manualmente aqui.
     // =========================
 
     const redSquarePayload = {
-      url: lootUrl,
+      url: returnUrl,
 
-      // LootLabs é o provider suportado
-      // pelo B.Y.P.A.S.S.
-      pikey:
-        LOOTLABS_API_KEY,
+      // API KEY DO LOOTLABS
+      pikey: LOOTLABS_API_KEY,
 
-      provider:
-        "lootlabs",
+      provider: "lootlabs",
 
-      Identificator:
-        "eclipse-hub",
+      Identificator: "eclipse-hub",
 
       jsonDetections: {
         Referer: true,
 
-        MaxTasks:
-          "3",
+        // SOMENTE 1 TAREFA LOOTLABS
+        MaxTasks: "1",
 
-        tier_id:
-          1,
+        // Tier 1
+        tier_id: 1,
 
         Presets: {
           "BYPASS.VIP": true,
@@ -380,6 +220,10 @@ module.exports = async function handler(req, res) {
 
           CaptchaRequired: true,
 
+          // =========================
+          // ÚNICA MISSÃO EXTRA
+          // =========================
+
           XTra_tasks: [
             {
               Title:
@@ -392,82 +236,96 @@ module.exports = async function handler(req, res) {
                 "https://www.tiktok.com/@adri.assis_",
 
               ID:
-                "eclipse_tiktok_follow"
+                "eclipse_tiktok_follow_v1"
             }
           ]
         },
 
-        MinTime:
-          "5",
+        MinTime: "5",
 
-        DetectUserscripts:
-          true,
+        DetectUserscripts: true,
 
-        UnicodeDetect:
-          true,
+        UnicodeDetect: true,
 
-        SpoofCompletion:
-          true,
+        SpoofCompletion: true,
 
-        RS_Invisible:
-          false,
+        RS_Invisible: false,
 
-        ManualDetectionZ:
-          false,
+        ManualDetectionZ: false,
 
         VMConfig: {
-          enabled:
-            true,
-
-          VMode:
-            "medium"
+          enabled: true,
+          VMode: "medium"
         }
       }
     };
 
-    console.log(
-      "================================="
-    );
+    // =========================
+    // LOG SEGURO
+    // =========================
+    //
+    // NÃO imprimir:
+    // - LootLabs API Key
+    // - RED-SQUARE API Key
+    // =========================
 
     console.log(
-      "RED-SQUARE PAYLOAD:"
+      "RED-SQUARE CONFIG:",
+      {
+        provider:
+          redSquarePayload.provider,
+
+        Identificator:
+          redSquarePayload.Identificator,
+
+        MaxTasks:
+          redSquarePayload
+            .jsonDetections
+            .MaxTasks,
+
+        tier_id:
+          redSquarePayload
+            .jsonDetections
+            .tier_id,
+
+        XTra_tasks:
+          redSquarePayload
+            .jsonDetections
+            .RenueveBooster
+            .XTra_tasks
+            .map(task => ({
+              Title: task.Title,
+              ID: task.ID
+            }))
+      }
     );
 
-    console.log(
-      JSON.stringify(
-        redSquarePayload,
-        null,
-        2
-      )
+    // =========================
+    // CRIA LINK PROTEGIDO
+    // =========================
+
+    const redSquareResponse = await fetch(
+      "https://kys.linkvertise.lol/api/v2/bck/publishers",
+      {
+        method: "POST",
+
+        headers: {
+          "c-api-key":
+            RED_SQUARE_API_KEY,
+
+          "Content-Type":
+            "application/json",
+
+          Accept:
+            "application/json"
+        },
+
+        body:
+          JSON.stringify(
+            redSquarePayload
+          )
+      }
     );
-
-    console.log(
-      "================================="
-    );
-
-    const redSquareResponse =
-      await fetch(
-        "https://kys.linkvertise.lol/api/v2/bck/publishers",
-        {
-          method: "POST",
-
-          headers: {
-            "c-api-key":
-              RED_SQUARE_API_KEY,
-
-            "Content-Type":
-              "application/json",
-
-            Accept:
-              "application/json"
-          },
-
-          body:
-            JSON.stringify(
-              redSquarePayload
-            )
-        }
-      );
 
     const redSquareRaw =
       await redSquareResponse.text();
@@ -476,19 +334,12 @@ module.exports = async function handler(req, res) {
 
     try {
       redSquareData =
-        JSON.parse(
-          redSquareRaw
-        );
+        JSON.parse(redSquareRaw);
     } catch {
       redSquareData = {
-        raw:
-          redSquareRaw
+        raw: redSquareRaw
       };
     }
-
-    console.log(
-      "================================="
-    );
 
     console.log(
       "RED-SQUARE STATUS:",
@@ -496,23 +347,21 @@ module.exports = async function handler(req, res) {
     );
 
     console.log(
-      "RED-SQUARE RESPOSTA:"
-    );
+      "RED-SQUARE RESPONSE:",
+      {
+        success:
+          redSquareData?.success,
 
-    console.log(
-      JSON.stringify(
-        redSquareData,
-        null,
-        2
-      )
-    );
+        hasLink:
+          !!redSquareData?.link,
 
-    console.log(
-      "================================="
+        reason:
+          redSquareData?.THReason || null
+      }
     );
 
     // =========================
-    // RED-SQUARE ERRO
+    // ERRO
     // =========================
 
     if (
@@ -521,18 +370,18 @@ module.exports = async function handler(req, res) {
       !redSquareData?.link
     ) {
       console.error(
-        "RED-SQUARE não retornou link válido:",
+        "RED-SQUARE ERROR:",
         redSquareData
       );
 
       return res.status(502).json({
         success: false,
         error:
-          "RED-SQUARE não conseguiu proteger o link.",
+          "RED-SQUARE não conseguiu criar o link.",
         red_square_status:
           redSquareResponse.status,
-        red_square_response:
-          redSquareData
+        red_square_reason:
+          redSquareData?.THReason || null
       });
     }
 
@@ -544,19 +393,21 @@ module.exports = async function handler(req, res) {
       redSquareData.link;
 
     console.log(
-      "LINK FINAL ECLIPSE:",
+      "RED-SQUARE LINK CRIADO:"
+    );
+
+    console.log(
       finalUrl
     );
 
     // =========================
-    // SUCESSO
+    // RESPOSTA
     // =========================
 
     return res.status(200).json({
       success: true,
 
-      url:
-        finalUrl,
+      url: finalUrl,
 
       token,
 
@@ -569,7 +420,7 @@ module.exports = async function handler(req, res) {
 
   } catch (error) {
     console.error(
-      "Erro interno /api/lootlabs/create:",
+      "Erro interno:",
       error
     );
 

@@ -140,7 +140,7 @@ module.exports = async (req, res) => {
     }
 
     // =========================================
-    // LER USUÁRIO
+    // LER USUÁRIO DISCORD
     // =========================================
 
     let user;
@@ -214,6 +214,20 @@ module.exports = async (req, res) => {
     }
 
     // =========================================
+    // DADOS DO DISCORD
+    // =========================================
+
+    const discordId = user.id;
+
+    const discordNick =
+      user.global_name ||
+      user.username ||
+      "Desconhecido";
+
+    const userId =
+      `${discordId} | ${discordNick}`;
+
+    // =========================================
     // SALVAR KEY
     // =========================================
 
@@ -225,7 +239,7 @@ module.exports = async (req, res) => {
       .insert({
         chave: key,
         usada: false,
-        user_id: null
+        user_id: userId
       })
       .select(
         "id, chave, usada, user_id"
@@ -253,7 +267,8 @@ module.exports = async (req, res) => {
       key: data.chave,
       usada: data.usada,
       user_id: data.user_id,
-      discord_id: user.id
+      discord_id: discordId,
+      discord_nick: discordNick
     });
 
   } catch (error) {

@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08070d">
+
+  <title>Eclipse Hub</title>
+
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+  <div class="bg-glow glow-one"></div>
+  <div class="bg-glow glow-two"></div>
+
+  <!-- OVERLAY DO MENU -->
+  <div class="menu-overlay" id="menuOverlay"></div>
+
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+
+    <button
+      class="menu-btn"
+      id="menuBtn"
+      aria-label="Abrir menu"
+      aria-expanded="false"
+    >
+      <svg viewBox="0 0 24 24">
+        <path d="M4 7H20"/>
+        <path d="M4 12H20"/>
+        <path d="M4 17H20"/>
+      </svg>
+    </button>
+
+
+    <div class="brand">
+
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3L20 7.5V16.5L12 21L4 16.5V7.5L12 3Z"/>
+          <path d="M8 10.5L12 8L16 10.5V15L12 17.5L8 15V10.5Z"/>
+        </svg>
+      </div>
+
+      <div class="brand-text">
+        <strong>ECLIPSE</strong>
+        <span>HUB</span>
+      </div>
+
+    </div>
+
+  </header>
+
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-inner">
+
+      <div class="sidebar-title">
+        NAVEGAÇÃO
+      </div>
+
+
+      <button class="nav-item active" data-page="home">
+
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 11.5L12 4L21 11.5"/>
+            <path d="M5.5 10V20H18.5V10"/>
+            <path d="M9.5 20V14H14.5V20"/>
+          </svg>
+        </span>
+
+        <span>Início</span>
+
+      </button>
+
+
+      <button class="nav-item" data-page="discord">
+
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M8.1 6.5C10.5 5.4 13.5 5.4 15.9 6.5C17.2 8.4 18 10.8 18.2 13.5C16.8 14.7 15.2 15.5 13.4 16L12.4 14.6C13.8 14.2 15 13.5 16 12.7C15.3 13.2 14.5 13.6 13.7 13.8C12.6 14.2 11.4 14.2 10.3 13.8C9.5 13.6 8.7 13.2 8 12.7C9 13.5 10.2 14.2 11.6 14.6L10.6 16C8.8 15.5 7.2 14.7 5.8 13.5C6 10.8 6.8 8.4 8.1 6.5Z"/>
+            <circle cx="9.5" cy="11.3" r="1"/>
+            <circle cx="14.5" cy="11.3" r="1"/>
+          </svg>
+        </span>
+
+        <span>Discord</span>
+
+      </button>
+
+
+      <button class="nav-item" data-page="key">
+
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24">
+            <circle cx="8.5" cy="15.5" r="4"/>
+            <path d="M11.5 12.5L20 4"/>
+            <path d="M16 8L18 10"/>
+            <path d="M18 6L20 8"/>
+          </svg>
+        </span>
+
+        <span>Obter Key</span>
+
+      </button>
+
+
+      <button class="nav-item" data-page="shop">
+
+        <span class="nav-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 5H6L8.2 15.5H18L20 8H7"/>
+            <circle cx="10" cy="19" r="1.5"/>
+            <circle cx="17" cy="19" r="1.5"/>
+          </svg>
+        </span>
+
+        <span>Comprar Script</span>
+
+      </button>
+
+    </div>
+
+
+    <div class="sidebar-bottom">
+
+      <span class="status-dot"></span>
+
+      <span>Sistema Online</span>
+
+    </div>
+
+  </aside>
+
+
+  <!-- CONTENT -->
+  <main class="content">
+
+
+    <!-- =====================================
+         INÍCIO
+    ====================================== -->
+
+    <section class="page active" id="home">
+
+      <div class="hero">
+
+        <div class="hero-badge">
+          <span class="pulse"></span>
+          ECLIPSE HUB
+        </div>
+
+
+        <h1>
+          Domine sua gameplay<br>
+          com a <span>Eclipse.</span>
+        </h1>
+
+
+        <p>
+          Um hub desenvolvido para entregar ferramentas,
+          automações e recursos avançados em uma interface
+          moderna e otimizada.
+        </p>
+
+      </div>
+
+
+      <div class="section-header">
+
+        <span class="eyebrow">
+          RECURSOS
+        </span>
+
+        <h2>
+          Principais funcionalidades
+        </h2>
+
+      </div>
+
+
+      <div class="features-grid">
+
+
+        <!-- FLY -->
+
+        <article class="feature-card shine-card">
+
+          <div class="feature-icon">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M3 15C6 14 7.5 10 10 9C12 8.2 13 10 15 11C17 12 18 9 21 8"/>
+              <path d="M5 18C8 17 9 14 12 14C15 14 16 17 19 16"/>
+              <path d="M7 6L9 4"/>
+              <path d="M17 6L19 4"/>
+            </svg>
+
+          </div>
+
+          <h3>Fly</h3>
+
+          <p>
+            Voe livremente pelo mapa e alcance qualquer área com facilidade.
+          </p>
+
+        </article>
+
+
+        <!-- LOCK ON -->
+
+        <article class="feature-card shine-card">
+
+          <div class="feature-icon">
+
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="7"/>
+              <circle cx="12" cy="12" r="2"/>
+              <path d="M12 2V5"/>
+              <path d="M12 19V22"/>
+              <path d="M2 12H5"/>
+              <path d="M19 12H22"/>
+            </svg>
+
+          </div>
+
+          <h3>Lock On</h3>
+
+          <p>
+            Trave automaticamente em jogadores e mantenha o alvo sempre no foco.
+          </p>
+
+        </article>
+
+
+        <!-- KILL ALL -->
+
+        <article class="feature-card shine-card">
+
+          <div class="feature-icon danger">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M6 4L12 10L18 4"/>
+              <path d="M18 20L12 14L6 20"/>
+              <path d="M4 8L8 12L4 16"/>
+              <path d="M20 8L16 12L20 16"/>
+            </svg>
+
+          </div>
+
+          <h3>Kill All</h3>
+
+          <p>
+            Use a Expansão 0.2 do Gojo para eliminar todos e farmar 100+ por vez.
+          </p>
+
+        </article>
+
+
+        <!-- BYPASS -->
+
+        <article class="feature-card shine-card">
+
+          <div class="feature-icon">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3L20 7V12C20 17 16.8 20 12 21C7.2 20 4 17 4 12V7L12 3Z"/>
+              <path d="M9 12L11 14L15.5 9.5"/>
+            </svg>
+
+          </div>
+
+          <h3>Auto Bypass</h3>
+
+          <p>
+            Supere bloqueios de teleporte e mantenha sua movimentação funcionando.
+          </p>
+
+        </article>
+
+
+        <!-- SERVIDOR -->
+
+        <article class="feature-card shine-card">
+
+          <div class="feature-icon">
+
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="8"/>
+              <path d="M4 12H20"/>
+              <path d="M12 4C14 6.2 15 9 15 12C15 15 14 17.8 12 20"/>
+              <path d="M12 4C10 6.2 9 9 9 12C9 15 10 17.8 12 20"/>
+            </svg>
+
+          </div>
+
+          <h3>Trocar de Servidor</h3>
+
+          <p>
+            Encontre rapidamente novos servidores e continue sua gameplay.
+          </p>
+
+        </article>
+
+
+        <!-- KOKUSEN -->
+
+        <article class="feature-card shine-card">
+
+          <div class="feature-icon">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M13 2L5 13H11L10 22L19 10H13L13 2Z"/>
+            </svg>
+
+          </div>
+
+          <h3>Auto Kokusen</h3>
+
+          <p>
+            Execute o Kokusen automaticamente e acelere seu farm.
+          </p>
+
+        </article>
+
+
+        <!-- COMBATE -->
+
+        <article class="feature-card wide shine-card">
+
+          <div class="feature-icon">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M7 11L4 8L7 5"/>
+              <path d="M17 13L20 16L17 19"/>
+              <path d="M8 19L16 5"/>
+            </svg>
+
+          </div>
+
+          <h3>Sistema de Combate</h3>
+
+          <p>
+            Automatize defesa, esquivas e golpes para dominar os combates.
+          </p>
+
+          <div class="mini-tags">
+            <span>Auto Block</span>
+            <span>Auto Dodge</span>
+            <span>Downslam</span>
+            <span>Uppercut</span>
+          </div>
+
+        </article>
+
+
+        <!-- INTERFACE -->
+
+        <article class="feature-card shine-card">
+
+          <div class="feature-icon">
+
+            <svg viewBox="0 0 24 24">
+              <rect x="4" y="4" width="16" height="16" rx="3"/>
+              <path d="M8 8H16"/>
+              <path d="M8 12H13"/>
+              <path d="M8 16H11"/>
+            </svg>
+
+          </div>
+
+          <h3>Interface Moderna</h3>
+
+          <p>
+            Interface Dark premium, otimizada, arrastável e com visual Eclipse.
+          </p>
+
+        </article>
+
+      </div>
+
+
+      <!-- DESENVOLVIMENTO -->
+
+      <div class="development-card shine-card">
+
+        <div class="development-icon">
+
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+            <path d="M19 16L20 18L22 19L20 20L19 22L18 20L16 19L18 18L19 16Z"/>
+          </svg>
+
+        </div>
+
+        <div>
+
+          <span>DESENVOLVIMENTO CONTÍNUO</span>
+
+          <h3>
+            O Eclipse está sempre evoluindo.
+          </h3>
+
+          <p>
+            Novas funções, melhorias de desempenho e correções
+            são adicionadas continuamente.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- AÇÕES -->
+
+      <div class="home-actions">
+
+        <a
+          class="action-btn discord-btn"
+          href="https://discord.gg/MZB9Fznp8B"
+          target="_blank"
+        >
+
+          <svg viewBox="0 0 24 24">
+            <path d="M8.1 6.5C10.5 5.4 13.5 5.4 15.9 6.5C17.2 8.4 18 10.8 18.2 13.5C16.8 14.7 15.2 15.5 13.4 16L12.4 14.6C13.8 14.2 15 13.5 16 12.7C15.3 13.2 14.5 13.6 13.7 13.8C12.6 14.2 11.4 14.2 10.3 13.8C9.5 13.6 8.7 13.2 8 12.7C9 13.5 10.2 14.2 11.6 14.6L10.6 16C8.8 15.5 7.2 14.7 5.8 13.5C6 10.8 6.8 8.4 8.1 6.5Z"/>
+            <circle cx="9.5" cy="11.3" r="1"/>
+            <circle cx="14.5" cy="11.3" r="1"/>
+          </svg>
+
+          Entre no nosso Discord
+
+        </a>
+
+
+        <button
+          class="action-btn buy-btn"
+          data-page="shop"
+        >
+
+          <svg viewBox="0 0 24 24">
+            <path d="M4 5H6L8.2 15.5H18L20 8H7"/>
+            <circle cx="10" cy="19" r="1.5"/>
+            <circle cx="17" cy="19" r="1.5"/>
+          </svg>
+
+          Comprar Script
+
+        </button>
+
+      </div>
+
+
+      <div class="warning">
+
+        <svg viewBox="0 0 24 24">
+          <path d="M12 3L21 20H3L12 3Z"/>
+          <path d="M12 9V13"/>
+          <circle cx="12" cy="16.5" r=".8"/>
+        </svg>
+
+        <span>
+          NÓS NÃO NOS RESPONSABILIZAMOS POR BANIMENTOS.
+        </span>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =====================================
+         DISCORD
+    ====================================== -->
+
+    <section class="page" id="discord">
+
+      <div class="page-center">
+
+        <div class="large-icon discord-large">
+
+          <svg viewBox="0 0 24 24">
+            <path d="M8.1 6.5C10.5 5.4 13.5 5.4 15.9 6.5C17.2 8.4 18 10.8 18.2 13.5C16.8 14.7 15.2 15.5 13.4 16L12.4 14.6C13.8 14.2 15 13.5 16 12.7C15.3 13.2 14.5 13.6 13.7 13.8C12.6 14.2 11.4 14.2 10.3 13.8C9.5 13.6 8.7 13.2 8 12.7C9 13.5 10.2 14.2 11.6 14.6L10.6 16C8.8 15.5 7.2 14.7 5.8 13.5C6 10.8 6.8 8.4 8.1 6.5Z"/>
+            <circle cx="9.5" cy="11.3" r="1"/>
+            <circle cx="14.5" cy="11.3" r="1"/>
+          </svg>
+
+        </div>
+
+        <span class="eyebrow">
+          COMUNIDADE
+        </span>
+
+        <h1>
+          Entre para o nosso Discord
+        </h1>
+
+        <p>
+          Faça parte da comunidade Eclipse Hub, acompanhe
+          atualizações, novidades e suporte.
+        </p>
+
+        <a
+          class="primary-btn"
+          href="https://discord.gg/MZB9Fznp8B"
+          target="_blank"
+        >
+
+          <svg viewBox="0 0 24 24">
+            <path d="M8.1 6.5C10.5 5.4 13.5 5.4 15.9 6.5C17.2 8.4 18 10.8 18.2 13.5C16.8 14.7 15.2 15.5 13.4 16L12.4 14.6C13.8 14.2 15 13.5 16 12.7C15.3 13.2 14.5 13.6 13.7 13.8C12.6 14.2 11.4 14.2 10.3 13.8C9.5 13.6 8.7 13.2 8 12.7C9 13.5 10.2 14.2 11.6 14.6L10.6 16C8.8 15.5 7.2 14.7 5.8 13.5C6 10.8 6.8 8.4 8.1 6.5Z"/>
+            <circle cx="9.5" cy="11.3" r="1"/>
+            <circle cx="14.5" cy="11.3" r="1"/>
+          </svg>
+
+          Entrar no Discord
+
+        </a>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =====================================
+         OBTER KEY
+    ====================================== -->
+
+    <section class="page" id="key">
+
+      <div class="key-page">
+
+        <div class="large-icon key-large">
+
+          <svg viewBox="0 0 24 24">
+            <circle cx="8.5" cy="15.5" r="4"/>
+            <path d="M11.5 12.5L20 4"/>
+            <path d="M16 8L18 10"/>
+            <path d="M18 6L20 8"/>
+          </svg>
+
+        </div>
+
+
+        <span class="eyebrow">
+          KEY SYSTEM
+        </span>
+
+
+        <h1>
+          Obter sua Key
+        </h1>
+
+
+        <p class="key-description">
+          Gere sua key de acesso ao Eclipse Hub através
+          do sistema oficial.
+        </p>
+
+
+        <!-- CONTA DISCORD -->
+
+        <div class="account-card shine-card">
+
+          <div class="account-left">
+
+            <div class="account-avatar">
+
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21C4.8 16.8 7.4 14.5 12 14.5C16.6 14.5 19.2 16.8 20 21"/>
+              </svg>
+
+            </div>
+
+
+            <div class="account-info">
+
+              <span class="account-label">
+                CONTA DISCORD
+              </span>
+
+              <strong id="discordStatus">
+                Verificando...
+              </strong>
+
+              <small id="discordUser">
+                Aguarde...
+              </small>
+
+            </div>
+
+          </div>
+
+
+          <div class="account-actions">
+
+            <button
+              id="discordLoginBtn"
+              class="account-btn"
+            >
+              Conectar Discord
+            </button>
+
+
+            <button
+              id="discordLogoutBtn"
+              class="account-btn danger-btn"
+              hidden
+            >
+              Desvincular
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- KEY -->
+
+        <div class="key-box shine-card">
+
+          <div class="key-heading">
+
+            <div class="key-box-icon">
+
+              <svg viewBox="0 0 24 24">
+                <circle cx="8.5" cy="15.5" r="4"/>
+                <path d="M11.5 12.5L20 4"/>
+                <path d="M16 8L18 10"/>
+                <path d="M18 6L20 8"/>
+              </svg>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                SUA KEY
+              </span>
+
+              <small>
+                Chave exclusiva de acesso
+              </small>
+
+            </div>
+
+          </div>
+
+
+          <div class="generated-key-box">
+
+            <strong id="generatedKey">
+              Aguardando geração...
+            </strong>
+
+          </div>
+
+
+          <div class="key-actions">
+
+            <button
+              id="generateKeyBtn"
+              class="primary-btn"
+            >
+
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3L14 8L19 10L14 12L12 17L10 12L5 10L10 8L12 3Z"/>
+              </svg>
+
+              Gerar Key
+
+            </button>
+
+
+            <button
+              id="copyKeyBtn"
+              class="secondary-btn"
+              disabled
+            >
+
+              <svg viewBox="0 0 24 24">
+                <rect x="8" y="8" width="11" height="11" rx="2"/>
+                <path d="M16 8V6C16 4.9 15.1 4 14 4H6C4.9 4 4 4.9 4 6V14C4 15.1 4.9 16 6 16H8"/>
+              </svg>
+
+              Copiar Key
+
+            </button>
+
+          </div>
+
+
+          <div class="key-note">
+
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3L21 20H3L12 3Z"/>
+              <path d="M12 9V13"/>
+              <circle cx="12" cy="16.5" r=".8"/>
+            </svg>
+
+            <span>
+              Sua conta Discord precisa estar vinculada para utilizar o sistema.
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- =====================================
+         COMPRAR SCRIPT
+    ====================================== -->
+
+    <section class="page" id="shop">
+
+      <div class="shop-page">
+
+
+        <div class="large-icon shop-large">
+
+          <svg viewBox="0 0 24 24">
+            <path d="M4 5H6L8.2 15.5H18L20 8H7"/>
+            <circle cx="10" cy="19" r="1.5"/>
+            <circle cx="17" cy="19" r="1.5"/>
+          </svg>
+
+        </div>
+
+
+        <span class="eyebrow">
+          ECLIPSE STORE
+        </span>
+
+
+        <h1>
+          Comprar agora seu <span>script</span>
+        </h1>
+
+
+        <p class="shop-description">
+          Adquira o Eclipse Hub de forma rápida e segura.
+        </p>
+
+
+        <!-- PAGAMENTO -->
+
+        <div class="payment-card shine-card">
+
+          <div class="pix-side">
+
+            <div class="pix-icon">
+
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="3"/>
+                <path d="M9 9L15 15"/>
+                <path d="M15 9L9 15"/>
+              </svg>
+
+            </div>
+
+            <span>
+              PAGAMENTO VIA
+            </span>
+
+            <strong>
+              Pix
+            </strong>
+
+          </div>
+
+
+          <div class="payment-info">
+
+            <span class="payment-label">
+              VALOR
+            </span>
+
+
+            <strong class="price">
+              R$ 4,99
+            </strong>
+
+
+            <p>
+              Envie o valor para a chave Pix abaixo:
+            </p>
+
+
+            <div class="pix-key">
+
+              <span id="pixKey">
+                b175d567-5e9a-440c-ad3b-797c6da945c1
+              </span>
+
+
+              <button
+                id="copyPixBtn"
+                aria-label="Copiar chave Pix"
+              >
+
+                <svg viewBox="0 0 24 24">
+                  <rect x="8" y="8" width="11" height="11" rx="2"/>
+                  <path d="M16 8V6C16 4.9 15.1 4 14 4H6C4.9 4 4 4.9 4 6V14C4 15.1 4.9 16 6 16H8"/>
+                </svg>
+
+              </button>
+
+            </div>
+
+
+            <button
+              class="copy-pix-btn"
+              id="copyPixMainBtn"
+            >
+
+              <svg viewBox="0 0 24 24">
+                <rect x="8" y="8" width="11" height="11" rx="2"/>
+                <path d="M16 8V6C16 4.9 15.1 4 14 4H6C4.9 4 4 4.9 4 6V14C4 15.1 4.9 16 6 16H8"/>
+              </svg>
+
+              Copiar chave Pix
+
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- ETAPAS -->
+
+        <div class="payment-steps">
+
+
+          <div class="payment-step shine-card">
+
+            <div class="step-icon">
+
+              <svg viewBox="0 0 24 24">
+                <rect x="4" y="5" width="16" height="14" rx="2"/>
+                <path d="M7 9H17"/>
+                <path d="M7 13H11"/>
+              </svg>
+
+            </div>
+
+            <div>
+
+              <strong>
+                1. Realize o pagamento
+              </strong>
+
+              <p>
+                Envie R$ 4,99 para a chave Pix informada acima.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="payment-step shine-card">
+
+            <div class="step-icon">
+
+              <svg viewBox="0 0 24 24">
+                <path d="M8.1 6.5C10.5 5.4 13.5 5.4 15.9 6.5C17.2 8.4 18 10.8 18.2 13.5C16.8 14.7 15.2 15.5 13.4 16L12.4 14.6C13.8 14.2 15 13.5 16 12.7C15.3 13.2 14.5 13.6 13.7 13.8C12.6 14.2 11.4 14.2 10.3 13.8C9.5 13.6 8.7 13.2 8 12.7C9 13.5 10.2 14.2 11.6 14.6L10.6 16C8.8 15.5 7.2 14.7 5.8 13.5C6 10.8 6.8 8.4 8.1 6.5Z"/>
+                <circle cx="9.5" cy="11.3" r="1"/>
+                <circle cx="14.5" cy="11.3" r="1"/>
+              </svg>
+
+            </div>
+
+            <div>
+
+              <strong>
+                2. Entre no Discord
+              </strong>
+
+              <p>
+                Após o pagamento, entre no nosso servidor.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="payment-step shine-card">
+
+            <div class="step-icon">
+
+              <svg viewBox="0 0 24 24">
+                <circle cx="8.5" cy="15.5" r="4"/>
+                <path d="M11.5 12.5L20 4"/>
+                <path d="M16 8L18 10"/>
+                <path d="M18 6L20 8"/>
+              </svg>
+
+            </div>
+
+            <div>
+
+              <strong>
+                3. Solicite o resgate
+              </strong>
+
+              <p>
+                Abra um ticket ou fale com nossa equipe para receber seu script.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- DISCORD -->
+
+        <a
+          class="discord-purchase-btn"
+          href="https://discord.gg/MZB9Fznp8B"
+          target="_blank"
+        >
+
+          <svg viewBox="0 0 24 24">
+            <path d="M8.1 6.5C10.5 5.4 13.5 5.4 15.9 6.5C17.2 8.4 18 10.8 18.2 13.5C16.8 14.7 15.2 15.5 13.4 16L12.4 14.6C13.8 14.2 15 13.5 16 12.7C15.3 13.2 14.5 13.6 13.7 13.8C12.6 14.2 11.4 14.2 10.3 13.8C9.5 13.6 8.7 13.2 8 12.7C9 13.5 10.2 14.2 11.6 14.6L10.6 16C8.8 15.5 7.2 14.7 5.8 13.5C6 10.8 6.8 8.4 8.1 6.5Z"/>
+            <circle cx="9.5" cy="11.3" r="1"/>
+            <circle cx="14.5" cy="11.3" r="1"/>
+          </svg>
+
+          Entrar no nosso Discord
+
+        </a>
+
+
+        <!-- AVISO -->
+
+        <div class="purchase-warning">
+
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3L21 20H3L12 3Z"/>
+            <path d="M12 9V13"/>
+            <circle cx="12" cy="16.5" r=".8"/>
+          </svg>
+
+          <div>
+
+            <strong>
+              Após realizar o pagamento
+            </strong>
+
+            <span>
+              Entre no nosso Discord para solicitar o resgate do script.
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <script src="/app.js"></script>
+
+</body>
+</html>

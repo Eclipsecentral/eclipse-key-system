@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Eclipse Admin</title>
+
+  <link
+    rel="stylesheet"
+    href="/admin.css"
+  >
+</head>
+
+<body>
+
+  <div class="admin">
+
+    <header class="header">
+
+      <div>
+        <div class="brand">
+          ECLIPSE
+        </div>
+
+        <div class="subtitle">
+          ADMIN PANEL
+        </div>
+      </div>
+
+      <button
+        id="logout"
+        class="logout"
+      >
+        Sair
+      </button>
+
+    </header>
+
+
+    <main>
+
+      <!-- STATUS -->
+
+      <section class="card">
+
+        <div class="card-title">
+          STATUS DO SITE
+        </div>
+
+        <div
+          id="status"
+          class="status"
+        >
+          Verificando...
+        </div>
+
+        <button
+          id="toggleSite"
+          class="toggle"
+        >
+          Verificando...
+        </button>
+
+      </section>
+
+
+      <!-- LOGS -->
+
+      <section class="card">
+
+        <div class="logs-header">
+
+          <div class="card-title">
+            LOGS DE KEYS
+          </div>
+
+          <button
+            id="refresh"
+            class="refresh"
+          >
+            Atualizar
+          </button>
+
+        </div>
+
+
+        <div
+          id="logs"
+          class="logs"
+        >
+          Carregando...
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+
+  <script src="/admin.js"></script>
+
+</body>
+
+</html>

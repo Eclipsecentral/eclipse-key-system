@@ -218,7 +218,7 @@ module.exports = async function handler(req, res) {
 
           BlockIncognito: true,
 
-          CaptchaRequired: true,
+          CaptchaRequired: false,
 
           // =========================
           // ÚNICA MISSÃO EXTRA
